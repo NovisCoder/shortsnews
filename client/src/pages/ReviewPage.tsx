@@ -1,20 +1,28 @@
-import { useRoute } from "wouter";
+import { useRoute, Link } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { getSessionValue } from "@/lib/sessionStore";
+import { apiRequest } from "../lib/queryClient";
+import { useToast } from "../hooks/use-toast";
+import { getSessionValue } from "../lib/sessionStore";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Textarea } from "../components/ui/textarea";
+import { Badge } from "../components/ui/badge";
 import {
-  AlertTriangle, CheckCircle2, Download, Loader2,
-  ChevronRight, FileJson, Captions, ArrowLeft, Github,
-  Film, Play, RefreshCw
+  AlertTriangle,
+  CheckCircle2,
+  Download,
+  Loader2,
+  ChevronRight,
+  FileJson,
+  Captions,
+  ArrowLeft,
+  Github,
+  Film,
+  Play,
+  RefreshCw,
 } from "lucide-react";
-import type { Project } from "@shared/schema";
-import { Link } from "wouter";
+import type { Project } from "../../../shared/schema";
 
 interface ScriptData {
   topic?: string;
