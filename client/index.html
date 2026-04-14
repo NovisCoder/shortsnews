@@ -14,5 +14,33 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <div style="margin:24px 0; padding:16px; border:1px solid #ddd; border-radius:12px;">
+  <h2 style="margin-top:0;">오늘의 뉴스 찾기</h2>
+  <p>아래 버튼을 누르면 오늘 뉴스 후보를 불러옵니다.</p>
+  <button id="findNewsBtn" type="button" style="padding:12px 16px; border:none; border-radius:8px; background:#111; color:#fff; cursor:pointer;">
+    오늘의 핵심 뉴스 찾기
+  </button>
+  <div id="newsResult" style="margin-top:16px; padding:12px; background:#f7f7f7; border-radius:8px;">
+    아직 불러온 뉴스가 없습니다.
+  </div>
+</div>
+    <script>
+  const findNewsBtn = document.getElementById('findNewsBtn');
+  const newsResult = document.getElementById('newsResult');
+
+  findNewsBtn.addEventListener('click', async () => {
+    newsResult.innerHTML = '불러오는 중...';
+
+    try {
+      newsResult.innerHTML = `
+        <strong>테스트 성공</strong><br>
+        버튼 클릭은 정상 작동했습니다.<br>
+        다음 단계에서 실제 뉴스 불러오기를 붙일 거예요.
+      `;
+    } catch (error) {
+      newsResult.innerHTML = '오류가 발생했습니다.';
+    }
+  });
+</script>
   </body>
 </html>
