@@ -1,3 +1,4 @@
+import React from "react";
 import { useState, useEffect } from "react";
 import { useHashLocation } from "wouter/use-hash-location";
 import { setSessionValue, getSessionValue } from "../lib/sessionStore";
