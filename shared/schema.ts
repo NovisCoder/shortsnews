@@ -2,6 +2,14 @@ import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// ─── App Settings (persistent key storage on server) ──────────────────────────
+export const appSettings = sqliteTable("app_settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+});
+
+export type AppSetting = typeof appSettings.$inferSelect;
+
 // ─── Projects (generated script packages) ───────────────────────────────────
 export const projects = sqliteTable("projects", {
   id: integer("id").primaryKey({ autoIncrement: true }),

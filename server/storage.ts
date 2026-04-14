@@ -1,12 +1,19 @@
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
-import { projects, type Project, type InsertProject } from "@shared/schema";
+import { projects, appSettings, type Project, type InsertProject, type AppSetting } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 
 const sqlite = new Database("shortsnews.db");
 const db = drizzle(sqlite);
 
-// Ensure table exists
+// Ensure tables exist
+sqlite.exec(`
+  CREATE TABLE IF NOT EXISTS app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
+`);
+
 sqlite.exec(`
   CREATE TABLE IF NOT EXISTS projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,6 +44,10 @@ export interface IStorage {
   createProject(data: InsertProject): Project;
   updateProject(projectId: string, data: Partial<InsertProject>): Project | undefined;
   deleteProject(projectId: string): void;
+  // Settings
+  getSetting(key: string): string | undefined;
+  setSetting(key: string, value: string): void;
+  getAllSettings(): Record<string, string>;
 }
 
 export const storage: IStorage = {
@@ -60,5 +71,19 @@ export const storage: IStorage = {
   },
   deleteProject(projectId) {
     db.delete(projects).where(eq(projects.projectId, projectId)).run();
+  },
+  getSetting(key) {
+    const row = db.select().from(appSettings).where(eq(appSettings.key, key)).get();
+    return row?.value;
+  },
+  setSetting(key, value) {
+    db.insert(appSettings)
+      .values({ key, value })
+      .onConflictDoUpdate({ target: appSettings.key, set: { value } })
+      .run();
+  },
+  getAllSettings() {
+    const rows = db.select().from(appSettings).all();
+    return Object.fromEntries(rows.map((r) => [r.key, r.value]));
   },
 };

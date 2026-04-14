@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
 import { setSessionValue, getSessionValue } from "@/lib/sessionStore";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -11,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, Eye, EyeOff, Github } from "lucide-react";
+import { Loader2, Sparkles, Eye, EyeOff, Github, Save, CheckCircle2 } from "lucide-react";
 import type { Project } from "@shared/schema";
 
 const ANGLES = [
@@ -38,19 +37,74 @@ export default function GeneratePage() {
   const [sourceUrl, setSourceUrl] = useState("");
   const [tone, setTone] = useState("easy_explainer");
   const [angle, setAngle] = useState("none");
-  // URL 파라미터에서 키 읽기 (북마크용) — ?gemini=AIza...&gh=ghp_...
-  const urlParams = new URLSearchParams(window.location.search);
-  const paramGemini = urlParams.get("gemini") || "";
-  const paramGh = urlParams.get("gh") || "";
 
-  const [apiKey, setApiKey] = useState(() => paramGemini || getSessionValue("geminiApiKey"));
+  const [apiKey, setApiKey] = useState(() => getSessionValue("geminiApiKey"));
   const [showKey, setShowKey] = useState(false);
-  const [githubToken, setGithubToken] = useState(() => paramGh || getSessionValue("githubToken"));
+  const [githubToken, setGithubToken] = useState(() => getSessionValue("githubToken"));
   const [showGhToken, setShowGhToken] = useState(false);
+
+  // Track save status
+  const [geminiSaved, setGeminiSaved] = useState(false);
+  const [ghSaved, setGhSaved] = useState(false);
+
+  // Load saved keys from server on mount
+  const { data: savedGemini } = useQuery<{ value: string }>({
+    queryKey: ["/api/settings/geminiApiKey"],
+    retry: false,
+    staleTime: Infinity,
+  });
+  const { data: savedGhToken } = useQuery<{ value: string }>({
+    queryKey: ["/api/settings/githubToken"],
+    retry: false,
+    staleTime: Infinity,
+  });
+
+  // Auto-fill from server if field is currently empty
+  useEffect(() => {
+    if (savedGemini?.value && !apiKey) {
+      setApiKey(savedGemini.value);
+      setGeminiSaved(true);
+    }
+  }, [savedGemini]);
+
+  useEffect(() => {
+    if (savedGhToken?.value && !githubToken) {
+      setGithubToken(savedGhToken.value);
+      setGhSaved(true);
+    }
+  }, [savedGhToken]);
 
   // Persist keys in session store so ReviewPage can read them
   useEffect(() => { setSessionValue("geminiApiKey", apiKey); }, [apiKey]);
   useEffect(() => { setSessionValue("githubToken", githubToken); }, [githubToken]);
+
+  // Reset saved indicator when user edits
+  useEffect(() => { setGeminiSaved(false); }, [apiKey]);
+  useEffect(() => { setGhSaved(false); }, [githubToken]);
+
+  // Save key mutation
+  const saveKeyMutation = useMutation({
+    mutationFn: async ({ key, value }: { key: string; value: string }) =>
+      await apiRequest("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, value }),
+      }),
+  });
+
+  const handleSaveGemini = async () => {
+    if (!apiKey.trim()) return;
+    await saveKeyMutation.mutateAsync({ key: "geminiApiKey", value: apiKey.trim() });
+    setGeminiSaved(true);
+    toast({ title: "Gemini API 키 저장 완료", description: "다음 번 앱 로드 시 자동으로 채워집니다." });
+  };
+
+  const handleSaveGhToken = async () => {
+    if (!githubToken.trim()) return;
+    await saveKeyMutation.mutateAsync({ key: "githubToken", value: githubToken.trim() });
+    setGhSaved(true);
+    toast({ title: "GitHub 토큰 저장 완료", description: "다음 번 앱 로드 시 자동으로 채워집니다." });
+  };
 
   const generateMutation = useMutation({
     mutationFn: async () => {
@@ -162,38 +216,59 @@ export default function GeneratePage() {
       {/* API Key section */}
       <div className="rounded-xl border border-border bg-card p-6 space-y-3">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium">Google Gemini API 키</Label>
-          <span className="text-xs text-muted-foreground">세션 내 임시 저장, 서버에 보관 안 됨</span>
+          <Label className="text-sm font-medium flex items-center gap-1.5">
+            Google Gemini API 키
+            {geminiSaved && (
+              <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-normal">
+                <CheckCircle2 size={12} />
+                저장됨
+              </span>
+            )}
+          </Label>
+          <span className="text-xs text-muted-foreground">서버에 저장, 자동 로드</span>
         </div>
-        <div className="relative">
-          <Input
-            type={showKey ? "text" : "password"}
-            placeholder="AIza..."
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            className="pr-10 font-mono text-sm"
-            data-testid="input-api-key"
-          />
-          <button
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Input
+              type={showKey ? "text" : "password"}
+              placeholder="AIza..."
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              className="pr-10 font-mono text-sm"
+              data-testid="input-api-key"
+            />
+            <button
+              type="button"
+              onClick={() => setShowKey(!showKey)}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              data-testid="button-toggle-key"
+            >
+              {showKey ? <EyeOff size={15} /> : <Eye size={15} />}
+            </button>
+          </div>
+          <Button
             type="button"
-            onClick={() => setShowKey(!showKey)}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            data-testid="button-toggle-key"
+            variant="outline"
+            size="sm"
+            onClick={handleSaveGemini}
+            disabled={!apiKey.trim() || saveKeyMutation.isPending || geminiSaved}
+            className="shrink-0 px-3"
+            data-testid="button-save-gemini"
           >
-            {showKey ? <EyeOff size={15} /> : <Eye size={15} />}
-          </button>
+            {geminiSaved ? <CheckCircle2 size={14} className="text-green-600" /> : <Save size={14} />}
+            <span className="ml-1.5 text-xs">{geminiSaved ? "저장됨" : "저장"}</span>
+          </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          API 키가 없으면{" "}
+          처음 한 번만 입력하고 저장하면 이후 자동으로 채워집니다.{" "}
           <a
             href="https://aistudio.google.com/apikey"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary underline"
           >
-            aistudio.google.com
+            API 키 발급
           </a>
-          에서 무료로 발급하세요.
         </p>
       </div>
 
@@ -203,40 +278,57 @@ export default function GeneratePage() {
           <Label className="text-sm font-medium flex items-center gap-1.5">
             <Github size={14} />
             GitHub Personal Access Token
+            {ghSaved && (
+              <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-normal">
+                <CheckCircle2 size={12} />
+                저장됨
+              </span>
+            )}
           </Label>
           <span className="text-xs text-muted-foreground">선택 — 승인 시 대본 자동 저장</span>
         </div>
-        <div className="relative">
-          <Input
-            type={showGhToken ? "text" : "password"}
-            placeholder="ghp_..."
-            value={githubToken}
-            onChange={(e) => setGithubToken(e.target.value)}
-            className="pr-10 font-mono text-sm"
-            data-testid="input-github-token"
-          />
-          <button
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Input
+              type={showGhToken ? "text" : "password"}
+              placeholder="ghp_..."
+              value={githubToken}
+              onChange={(e) => setGithubToken(e.target.value)}
+              className="pr-10 font-mono text-sm"
+              data-testid="input-github-token"
+            />
+            <button
+              type="button"
+              onClick={() => setShowGhToken(!showGhToken)}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              data-testid="button-toggle-gh-token"
+            >
+              {showGhToken ? <EyeOff size={15} /> : <Eye size={15} />}
+            </button>
+          </div>
+          <Button
             type="button"
-            onClick={() => setShowGhToken(!showGhToken)}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            data-testid="button-toggle-gh-token"
+            variant="outline"
+            size="sm"
+            onClick={handleSaveGhToken}
+            disabled={!githubToken.trim() || saveKeyMutation.isPending || ghSaved}
+            className="shrink-0 px-3"
+            data-testid="button-save-gh-token"
           >
-            {showGhToken ? <EyeOff size={15} /> : <Eye size={15} />}
-          </button>
+            {ghSaved ? <CheckCircle2 size={14} className="text-green-600" /> : <Save size={14} />}
+            <span className="ml-1.5 text-xs">{ghSaved ? "저장됨" : "저장"}</span>
+          </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          입력 시 승인된 대본이 GitHub 레포{" "}
-          <code className="text-primary/80">scripts/</code> 폴더에 자동 커밋됩니다.
-          토큰은{" "}
+          처음 한 번만 입력하고 저장하면 이후 자동으로 채워집니다.{" "}
           <a
             href="https://github.com/settings/tokens/new?scopes=repo&description=ShortsNews"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary underline"
           >
-            여기서 생성
+            토큰 생성 (repo 권한 필요)
           </a>
-          하세요. (repo 권한 필요)
         </p>
       </div>
 

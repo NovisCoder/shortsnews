@@ -297,6 +297,35 @@ export function registerRoutes(httpServer: ReturnType<typeof createServer>, app:
     res.json({ ...updated, github: githubResult });
   });
 
+  // GET settings
+  app.get("/api/settings", (_req, res) => {
+    const settings = storage.getAllSettings();
+    // Never expose actual values of sensitive keys — return masked versions
+    const masked: Record<string, string> = {};
+    for (const [k, v] of Object.entries(settings)) {
+      // Return whether value is set, plus last 4 chars for identification
+      masked[k] = v ? `saved:${v.slice(-4)}` : "";
+    }
+    res.json(masked);
+  });
+
+  // POST settings — save a single key/value
+  app.post("/api/settings", (req, res) => {
+    const { key, value } = req.body;
+    if (!key || typeof value !== "string") {
+      return res.status(400).json({ error: "key and value required" });
+    }
+    storage.setSetting(key, value);
+    res.json({ ok: true });
+  });
+
+  // GET a single setting raw value (used by generate page on load)
+  app.get("/api/settings/:key", (req, res) => {
+    const value = storage.getSetting(req.params.key);
+    if (value === undefined) return res.status(404).json({ error: "Not found" });
+    res.json({ value });
+  });
+
   // DELETE project
   app.delete("/api/projects/:projectId", (req, res) => {
     storage.deleteProject(req.params.projectId);
