@@ -157,56 +157,97 @@ export default function GeneratePage() {
     });
   };
 
-  const handleFetchTodayNews = async () => {
-    try {
-      setTodayNewsLoading(true);
+const handleFetchTodayNews = async () => {
+  try {
+    setTodayNewsLoading(true);
 
-      await new Promise((resolve) => setTimeout(resolve, 600));
+    const googleNewsRssUrl =
+      "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko";
+    const rssToJsonUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(
+      googleNewsRssUrl
+    )}`;
 
-      setTodayNews({
-        headline: "오늘의 테스트 핵심 뉴스: 금리·물가·부동산 이슈 정리",
-        summary:
-          "현재는 GitHub Pages 환경에서 동작 확인을 위한 테스트 데이터가 표시되고 있습니다. 버튼 클릭, 상태 변경, 카드 렌더링이 정상인지 먼저 확인하는 단계입니다.",
-        keywords: ["금리", "물가", "부동산", "한국경제", "테스트"],
-        articles: [
-          {
-            title: "테스트 기사 1: 기준금리 동결이 시장에 미치는 영향",
-            url: "https://example.com/test-news-1",
-            source: "테스트 데이터",
-            publishedAt: "2026-04-14T17:00:00+09:00",
-          },
-          {
-            title: "테스트 기사 2: 소비자물가 흐름과 체감 경기 변화",
-            url: "https://example.com/test-news-2",
-            source: "테스트 데이터",
-            publishedAt: "2026-04-14T17:01:00+09:00",
-          },
-          {
-            title: "테스트 기사 3: 부동산 시장 관망세 이어지나",
-            url: "https://example.com/test-news-3",
-            source: "테스트 데이터",
-            publishedAt: "2026-04-14T17:02:00+09:00",
-          },
-        ],
-      });
+    const response = await fetch(rssToJsonUrl, {
+      method: "GET",
+    });
 
-      toast({
-        title: "오늘의 핵심 뉴스 불러오기 완료",
-        description: "테스트 데이터가 정상 표시되었습니다.",
-      });
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.";
-
-      toast({
-        title: "뉴스 불러오기 실패",
-        description: message,
-        variant: "destructive",
-      });
-    } finally {
-      setTodayNewsLoading(false);
+    if (!response.ok) {
+      throw new Error(`RSS 요청 실패 (${response.status})`);
     }
-  };
+
+    const data = await response.json();
+
+    if (data.status !== "ok" || !data.items || data.items.length === 0) {
+      throw new Error("뉴스 데이터를 불러오지 못했습니다.");
+    }
+
+    const articles = data.items.slice(0, 5).map((item: any) => ({
+      title: item.title || "제목 없음",
+      url: item.link || "#",
+      source: "Google News",
+      publishedAt: item.pubDate,
+    }));
+
+    const headline = articles[0]?.title || "오늘의 핵심 뉴스";
+
+    const keywords = headline
+      .split(/[,\-\|\·\[\]\(\)\/\s]+/)
+      .map((word: string) => word.trim())
+      .filter((word: string) => word.length >= 2)
+      .slice(0, 5);
+
+    setTodayNews({
+      headline,
+      summary:
+        "Google News RSS 기준으로 오늘 많이 다뤄지는 기사들을 불러왔습니다. 아래 링크를 눌러 원문을 확인할 수 있습니다.",
+      keywords,
+      articles,
+    });
+
+    toast({
+      title: "오늘의 핵심 뉴스 불러오기 완료",
+      description: "실제 뉴스 데이터를 가져왔어요.",
+    });
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.";
+
+    toast({
+      title: "뉴스 불러오기 실패",
+      description: `${message} — 테스트 데이터로 대체합니다.`,
+      variant: "destructive",
+    });
+
+    setTodayNews({
+      headline: "오늘의 테스트 핵심 뉴스: 금리·물가·부동산 이슈 정리",
+      summary:
+        "실제 뉴스 호출이 실패해서 테스트 데이터를 대신 표시하고 있습니다. GitHub Pages 환경이나 외부 API 응답 상태를 확인해 주세요.",
+      keywords: ["금리", "물가", "부동산", "한국경제", "테스트"],
+      articles: [
+        {
+          title: "테스트 기사 1: 기준금리 동결이 시장에 미치는 영향",
+          url: "https://example.com/test-news-1",
+          source: "테스트 데이터",
+          publishedAt: "2026-04-14T17:00:00+09:00",
+        },
+        {
+          title: "테스트 기사 2: 소비자물가 흐름과 체감 경기 변화",
+          url: "https://example.com/test-news-2",
+          source: "테스트 데이터",
+          publishedAt: "2026-04-14T17:01:00+09:00",
+        },
+        {
+          title: "테스트 기사 3: 부동산 시장 관망세 이어지나",
+          url: "https://example.com/test-news-3",
+          source: "테스트 데이터",
+          publishedAt: "2026-04-14T17:02:00+09:00",
+        },
+      ],
+    });
+  } finally {
+    setTodayNewsLoading(false);
+  }
+};
 
   const generateMutation = useMutation({
     mutationFn: async () => {
