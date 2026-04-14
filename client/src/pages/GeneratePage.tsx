@@ -38,9 +38,14 @@ export default function GeneratePage() {
   const [sourceUrl, setSourceUrl] = useState("");
   const [tone, setTone] = useState("easy_explainer");
   const [angle, setAngle] = useState("none");
-  const [apiKey, setApiKey] = useState(() => getSessionValue("geminiApiKey"));
+  // URL 파라미터에서 키 읽기 (북마크용) — ?gemini=AIza...&gh=ghp_...
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramGemini = urlParams.get("gemini") || "";
+  const paramGh = urlParams.get("gh") || "";
+
+  const [apiKey, setApiKey] = useState(() => paramGemini || getSessionValue("geminiApiKey"));
   const [showKey, setShowKey] = useState(false);
-  const [githubToken, setGithubToken] = useState(() => getSessionValue("githubToken"));
+  const [githubToken, setGithubToken] = useState(() => paramGh || getSessionValue("githubToken"));
   const [showGhToken, setShowGhToken] = useState(false);
 
   // Persist keys in session store so ReviewPage can read them
