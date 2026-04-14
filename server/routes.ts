@@ -374,5 +374,152 @@ export function registerRoutes(httpServer: ReturnType<typeof createServer>, app:
     res.send(JSON.stringify(exportPackage, null, 2));
   });
 
+  // ─── Video generation ──────────────────────────────────────────────
+  const { spawn } = require("child_process");
+  const path = require("path");
+  const fs = require("fs");
+
+  // Track active video jobs
+  const videoJobs = new Map<string, { status: string; progress: string[]; outputPath?: string; error?: string }>();
+
+  // POST generate video for a project
+  app.post("/api/projects/:projectId/video", (req, res) => {
+    const project = storage.getProject(req.params.projectId);
+    if (!project) return res.status(404).json({ error: "Not found" });
+
+    const jobId = `vid_${Date.now()}`;
+    const tmpDir = `/tmp/shortsnews_videos`;
+    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+
+    const projectJsonPath = path.join(tmpDir, `${jobId}_input.json`);
+    const outputPath = path.join(tmpDir, `${jobId}.mp4`);
+
+    // Write project data for Python script
+    const scriptData = project.scriptJson ? JSON.parse(project.scriptJson) : {};
+    fs.writeFileSync(projectJsonPath, JSON.stringify({
+      projectId: project.projectId,
+      scriptData,
+      articleTitle: project.articleTitle,
+    }));
+
+    videoJobs.set(jobId, { status: "running", progress: [] });
+
+    const voice = req.body?.voice || "kore";
+    const pythonScript = path.join(__dirname, "make_video.py");
+
+    const child = spawn("python3", [
+      pythonScript,
+      "--project-json", projectJsonPath,
+      "--output", outputPath,
+      "--voice", voice,
+    ], {
+      cwd: __dirname,
+      env: { ...process.env },
+    });
+
+    child.stdout.on("data", (data: Buffer) => {
+      const lines = data.toString().split("\n").filter(Boolean);
+      for (const line of lines) {
+        try {
+          const msg = JSON.parse(line);
+          const job = videoJobs.get(jobId);
+          if (!job) continue;
+          if (msg.type === "progress") {
+            job.progress.push(msg.message);
+          } else if (msg.type === "done") {
+            job.status = "done";
+            job.outputPath = outputPath;
+          } else if (msg.type === "error") {
+            job.status = "error";
+            job.error = msg.message;
+          }
+        } catch {
+          // non-JSON output, ignore
+        }
+      }
+    });
+
+    child.stderr.on("data", (data: Buffer) => {
+      // Python stderr (warnings etc) — log but don't fail
+      console.error(`[video:${jobId}] ${data.toString().slice(0, 200)}`);
+    });
+
+    child.on("close", (code: number) => {
+      const job = videoJobs.get(jobId);
+      if (job && job.status === "running") {
+        if (code === 0) {
+          job.status = "done";
+          job.outputPath = outputPath;
+        } else {
+          job.status = "error";
+          job.error = `Process exited with code ${code}`;
+        }
+      }
+    });
+
+    res.json({ jobId });
+  });
+
+  // GET video job status
+  app.get("/api/video-jobs/:jobId", (req, res) => {
+    const job = videoJobs.get(req.params.jobId);
+    if (!job) return res.status(404).json({ error: "Job not found" });
+    res.json({
+      status: job.status,
+      progress: job.progress,
+      error: job.error,
+    });
+  });
+
+  // GET download the generated video
+  app.get("/api/video-jobs/:jobId/download", (req, res) => {
+    const job = videoJobs.get(req.params.jobId);
+    if (!job || job.status !== "done" || !job.outputPath) {
+      return res.status(404).json({ error: "Video not ready" });
+    }
+    if (!fs.existsSync(job.outputPath)) {
+      return res.status(404).json({ error: "Video file not found" });
+    }
+    res.setHeader("Content-Type", "video/mp4");
+    res.setHeader("Content-Disposition", `attachment; filename="shortsnews_${req.params.jobId}.mp4"`);
+    const stream = fs.createReadStream(job.outputPath);
+    stream.pipe(res);
+  });
+
+  // GET stream the video for preview (supports range requests)
+  app.get("/api/video-jobs/:jobId/stream", (req, res) => {
+    const job = videoJobs.get(req.params.jobId);
+    if (!job || job.status !== "done" || !job.outputPath) {
+      return res.status(404).json({ error: "Video not ready" });
+    }
+    if (!fs.existsSync(job.outputPath)) {
+      return res.status(404).json({ error: "Video file not found" });
+    }
+    const stat = fs.statSync(job.outputPath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunkSize = end - start + 1;
+      const stream = fs.createReadStream(job.outputPath, { start, end });
+      res.writeHead(206, {
+        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": chunkSize,
+        "Content-Type": "video/mp4",
+      });
+      stream.pipe(res);
+    } else {
+      res.writeHead(200, {
+        "Content-Length": fileSize,
+        "Content-Type": "video/mp4",
+      });
+      fs.createReadStream(job.outputPath).pipe(res);
+    }
+  });
+
   return httpServer;
 }

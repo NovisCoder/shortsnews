@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertTriangle, CheckCircle2, Download, Loader2,
-  ChevronRight, FileJson, Captions, ArrowLeft, Github
+  ChevronRight, FileJson, Captions, ArrowLeft, Github,
+  Film, Play, RefreshCw
 } from "lucide-react";
 import type { Project } from "@shared/schema";
 import { Link } from "wouter";
@@ -383,6 +384,181 @@ export default function ReviewPage() {
           EN 자막
         </Button>
       </div>
+
+      {/* Video generation section */}
+      {isApproved && (
+        <VideoSection projectId={projectId} />
+      )}
+    </div>
+  );
+}
+
+// ─── Video Generation Section ──────────────────────────────────────────────
+const VOICE_OPTIONS = [
+  { value: "kore", label: "Kore (여성, 차분)" },
+  { value: "charon", label: "Charon (남성, 낮은)" },
+  { value: "fenrir", label: "Fenrir (남성, 밝은)" },
+  { value: "aoede", label: "Aoede (여성, 밝은)" },
+  { value: "puck", label: "Puck (남성, 캐주얼)" },
+];
+
+function VideoSection({ projectId }: { projectId: string }) {
+  const { toast } = useToast();
+  const [videoJobId, setVideoJobId] = useState<string | null>(null);
+  const [selectedVoice, setSelectedVoice] = useState("kore");
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Poll job status
+  const { data: jobStatus } = useQuery<{ status: string; progress: string[]; error?: string }>({
+    queryKey: ["/api/video-jobs", videoJobId],
+    queryFn: () => apiRequest(`/api/video-jobs/${videoJobId}`),
+    enabled: !!videoJobId && isGenerating,
+    refetchInterval: 2000,
+  });
+
+  useEffect(() => {
+    if (jobStatus?.status === "done") {
+      setIsGenerating(false);
+      toast({ title: "영상 생성 완료", description: "미리보기 및 다운로드가 준비되었습니다." });
+    } else if (jobStatus?.status === "error") {
+      setIsGenerating(false);
+      toast({ title: "영상 생성 실패", description: jobStatus.error || "알 수 없는 오류", variant: "destructive" });
+    }
+  }, [jobStatus?.status]);
+
+  const startGeneration = async () => {
+    setIsGenerating(true);
+    try {
+      const result = await apiRequest<{ jobId: string }>(`/api/projects/${projectId}/video`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ voice: selectedVoice }),
+      });
+      setVideoJobId(result.jobId);
+    } catch (err: any) {
+      setIsGenerating(false);
+      toast({ title: "시작 실패", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const isDone = jobStatus?.status === "done";
+  const isError = jobStatus?.status === "error";
+  const progress = jobStatus?.progress || [];
+  const lastProgress = progress[progress.length - 1] || "";
+
+  // Build video URL for download/stream
+  const videoStreamUrl = videoJobId ? `/api/video-jobs/${videoJobId}/stream` : null;
+  const videoDownloadUrl = videoJobId ? `/api/video-jobs/${videoJobId}/download` : null;
+
+  return (
+    <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-6 space-y-4">
+      <div className="flex items-center gap-2">
+        <Film size={18} className="text-primary" />
+        <h2 className="text-lg font-bold">쇼츠 영상 생성</h2>
+      </div>
+
+      <p className="text-sm text-muted-foreground">
+        승인된 대본으로 TTS 음성 + AI 배경 이미지 + 자막이 합성된 9:16 쇼츠 영상을 자동 생성합니다.
+      </p>
+
+      {!isDone && (
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <label className="text-xs text-muted-foreground block mb-1">나레이션 목소리</label>
+            <select
+              value={selectedVoice}
+              onChange={(e) => setSelectedVoice(e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              disabled={isGenerating}
+              data-testid="select-voice"
+            >
+              {VOICE_OPTIONS.map((v) => (
+                <option key={v.value} value={v.value}>{v.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="pt-5">
+            <Button
+              onClick={startGeneration}
+              disabled={isGenerating}
+              className="px-6"
+              data-testid="button-generate-video"
+            >
+              {isGenerating ? (
+                <><Loader2 size={16} className="mr-2 animate-spin" />생성 중...</>
+              ) : (
+                <><Film size={16} className="mr-2" />영상 생성</>
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Progress log */}
+      {isGenerating && progress.length > 0 && (
+        <div className="rounded-lg bg-background/50 border border-border p-3 space-y-1 max-h-48 overflow-y-auto">
+          <p className="text-xs font-medium text-muted-foreground mb-2">진행 상황</p>
+          {progress.map((msg, i) => (
+            <p key={i} className={`text-xs ${i === progress.length - 1 ? "text-primary font-medium" : "text-muted-foreground"}`}>
+              {msg}
+            </p>
+          ))}
+          {isGenerating && (
+            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border">
+              <Loader2 size={12} className="animate-spin text-primary" />
+              <span className="text-xs text-primary">{lastProgress || "준비 중..."}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Error state */}
+      {isError && (
+        <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3 space-y-2">
+          <p className="text-sm text-destructive font-medium">생성 실패</p>
+          <p className="text-xs text-destructive/70">{jobStatus?.error}</p>
+          <Button variant="outline" size="sm" onClick={startGeneration} data-testid="button-retry-video">
+            <RefreshCw size={14} className="mr-1.5" />
+            다시 시도
+          </Button>
+        </div>
+      )}
+
+      {/* Video preview + download */}
+      {isDone && videoStreamUrl && (
+        <div className="space-y-4">
+          <div className="rounded-lg overflow-hidden bg-black flex justify-center" style={{ maxHeight: "480px" }}>
+            <video
+              src={videoStreamUrl}
+              controls
+              playsInline
+              className="max-h-[480px] w-auto"
+              style={{ aspectRatio: "9/16" }}
+              data-testid="video-preview"
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <a
+              href={videoDownloadUrl!}
+              download
+              className="flex-1"
+            >
+              <Button className="w-full" data-testid="button-download-video">
+                <Download size={16} className="mr-2" />
+                MP4 다운로드
+              </Button>
+            </a>
+            <Button variant="outline" onClick={() => {
+              setVideoJobId(null);
+              setIsGenerating(false);
+            }} data-testid="button-regenerate-video">
+              <RefreshCw size={16} className="mr-1.5" />
+              다시 만들기
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
