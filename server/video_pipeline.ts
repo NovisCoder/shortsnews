@@ -60,12 +60,8 @@ function pcmToWav(pcmBuf: Buffer, sampleRate = 24000, channels = 1, bitsPerSampl
   return Buffer.concat([header, pcmBuf]);
 }
 
-// ─── Gemini TTS ───────────────────────────────────────────────────────────────
-async function generateTTS(
-  text: string,
-  voiceName: string,
-  apiKey: string
-): Promise<{ wavBuffer: Buffer; duration: number }> {
+// ─── Gemini TTS (with rate-limit retry) ─────────────────────────────────────
+async function callGeminiTTS(text: string, voiceName: string, apiKey: string): Promise<string> {
   const body = JSON.stringify({
     contents: [{ parts: [{ text }] }],
     generationConfig: {
@@ -76,7 +72,7 @@ async function generateTTS(
     },
   });
 
-  const pcmB64 = await new Promise<string>((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     const req = https.request(
       {
         hostname: "generativelanguage.googleapis.com",
@@ -102,12 +98,49 @@ async function generateTTS(
     req.write(body);
     req.end();
   });
+}
 
-  const pcmBuf = Buffer.from(pcmB64, "base64");
-  const wavBuffer = pcmToWav(pcmBuf);
-  // Duration: PCM samples = bytes/2 (16-bit), duration = samples / sampleRate
-  const duration = pcmBuf.length / 2 / 24000;
-  return { wavBuffer, duration };
+async function generateTTS(
+  text: string,
+  voiceName: string,
+  apiKey: string,
+  job: VideoJob
+): Promise<{ wavBuffer: Buffer; duration: number }> {
+  const MAX_RETRIES = 5;
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const pcmB64 = await callGeminiTTS(text, voiceName, apiKey);
+      const pcmBuf = Buffer.from(pcmB64, "base64");
+      const wavBuffer = pcmToWav(pcmBuf);
+      const duration = pcmBuf.length / 2 / 24000;
+      return { wavBuffer, duration };
+    } catch (err: any) {
+      const msg: string = err.message || "";
+
+      // Parse "Please retry in X.XXs" from quota error
+      const retryMatch = msg.match(/retry in ([\d.]+)s/);
+      if (retryMatch) {
+        const waitSec = Math.ceil(parseFloat(retryMatch[1])) + 2; // add 2s buffer
+        job.progress.push(`  ⏳ TTS 한도 초과, ${waitSec}초 후 자동 재시도...`);
+        await new Promise((r) => setTimeout(r, waitSec * 1000));
+        continue; // retry
+      }
+
+      // Generic 429 / rate limit without retry-after
+      if (msg.includes("quota") || msg.includes("429") || msg.includes("RESOURCE_EXHAUSTED")) {
+        const waitSec = 30 * (attempt + 1);
+        job.progress.push(`  ⏳ TTS 요청 한도, ${waitSec}초 후 재시도...`);
+        await new Promise((r) => setTimeout(r, waitSec * 1000));
+        continue;
+      }
+
+      // Non-retriable error
+      throw err;
+    }
+  }
+
+  throw new Error("TTS 최대 재시도 횟수 초과. 잠시 후 다시 시도해주세요.");
 }
 
 // ─── Escape ffmpeg drawtext string ───────────────────────────────────────────
@@ -258,7 +291,7 @@ export async function generateVideo(params: {
     const segPath = path.join(tmpDir, `seg_${i}.mp4`);
 
     // Generate TTS
-    const { wavBuffer, duration } = await generateTTS(sec.text, voice, apiKey);
+    const { wavBuffer, duration } = await generateTTS(sec.text, voice, apiKey, job);
     fs.writeFileSync(audioPath, wavBuffer);
 
     job.progress.push(`  → ${duration.toFixed(1)}초 / 영상 렌더링 중...`);
