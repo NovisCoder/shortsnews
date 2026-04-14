@@ -1,17 +1,36 @@
 import { useState, useEffect } from "react";
 import { useHashLocation } from "wouter/use-hash-location";
-import { setSessionValue, getSessionValue } from "@/lib/sessionStore";
+import { setSessionValue, getSessionValue } from "../lib/sessionStore";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, Eye, EyeOff, Github, Save, CheckCircle2 } from "lucide-react";
-import type { Project } from "@shared/schema";
+import { apiRequest } from "../lib/queryClient";
+import { useToast } from "../hooks/use-toast";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "../components/ui/tabs";
+import { Button } from "../components/ui/button";
+import { Textarea } from "../components/ui/textarea";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import {
+  Loader2,
+  Sparkles,
+  Eye,
+  EyeOff,
+  Github,
+  Save,
+  CheckCircle2,
+} from "lucide-react";
+import type { Project } from "../../../shared/schema";
 
 const ANGLES = [
   { value: "none", label: "기본 (일반 시청자)" },
