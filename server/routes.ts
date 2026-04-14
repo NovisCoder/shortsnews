@@ -159,6 +159,78 @@ async function fetchArticleText(url: string): Promise<{ title: string; text: str
 }
 
 export function registerRoutes(httpServer: ReturnType<typeof createServer>, app: Express) {
+  import Parser from "rss-parser";
+
+const rssParser = new Parser();
+
+// ── Today News endpoint ──────────────────────────────────────────────────────
+// 오늘의 핵심 뉴스 1건 + 관련 기사들을 RSS에서 가져오는 간단 버전
+async function fetchTodayNews() {
+  const feeds = [
+    { url: "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko", source: "Google News KR" },
+    { url: "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en", source: "Google News US" },
+  ];
+
+  const items: {
+    title: string;
+    url: string;
+    source: string;
+    publishedAt?: string;
+  }[] = [];
+
+  for (const feed of feeds) {
+    try {
+      const parsed = await rssParser.parseURL(feed.url);
+      for (const item of parsed.items?.slice(0, 10) ?? []) {
+        if (!item.link || !item.title) continue;
+        items.push({
+          title: item.title,
+          url: item.link,
+          source: feed.source,
+          publishedAt: item.pubDate,
+        });
+      }
+    } catch (e) {
+      console.error("RSS parse error for", feed.url, e);
+    }
+  }
+
+  if (!items.length) {
+    throw new Error("뉴스 피드에서 기사를 찾지 못했습니다.");
+  }
+
+  // 아주 단순한 버전: 가장 위 기사 1건을 대표로 사용
+  const top = items[0];
+
+  const keywords = top.title
+    .split(/\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length >= 2)
+    .slice(0, 5);
+
+  return {
+    headline: top.title,
+    summary:
+      "오늘 주요 뉴스 피드에서 가장 먼저 포착된 핵심 기사입니다. 다음 단계에서 이 이슈를 바탕으로 쇼츠 대본을 만들 수 있습니다.",
+    keywords,
+    articles: items.slice(0, 8),
+  };
+}
+  export function registerRoutes(httpServer: ReturnType<typeof createServer>, app: Express) {
+  // 오늘의 핵심 뉴스
+  app.get("/api/today-news", async (_req, res) => {
+    try {
+      const data = await fetchTodayNews();
+      res.json(data);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      res.status(500).json({ error: message || "오늘의 뉴스 불러오기 실패" });
+    }
+  });
+
+  // GET all projects
+  app.get("/api/projects", (_req, res) => {
+    ...
   // GET all projects
   app.get("/api/projects", (_req, res) => {
     const all = storage.getAllProjects();
