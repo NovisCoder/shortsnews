@@ -148,7 +148,25 @@ export default function GeneratePage() {
       description: "다음 번 앱 로드 시 자동으로 채워집니다.",
     });
   };
-
+const todayNewsMutation = useMutation({
+  mutationFn: async () => {
+    return await apiRequest<TodayNewsResponse>("/api/today-news");
+  },
+  onSuccess: (data) => {
+    setTodayNews(data);
+    toast({
+      title: "오늘의 핵심 뉴스 불러오기 완료",
+      description: "대표 이슈와 관련 기사들을 가져왔어요.",
+    });
+  },
+  onError: (err: Error) => {
+    toast({
+      title: "뉴스 불러오기 실패",
+      description: err.message,
+      variant: "destructive",
+    });
+  },
+});
   const generateMutation = useMutation({
     mutationFn: async () => {
       return await apiRequest<Project>("/api/generate", {
