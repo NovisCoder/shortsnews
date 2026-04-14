@@ -43,46 +43,53 @@ export default function GeneratePage() {
   const [githubToken, setGithubToken] = useState(() => getSessionValue("githubToken"));
   const [showGhToken, setShowGhToken] = useState(false);
 
-  // Track save status
   const [geminiSaved, setGeminiSaved] = useState(false);
   const [ghSaved, setGhSaved] = useState(false);
 
-  // Load saved keys from server on mount
+  const [todayNews, setTodayNews] = useState<string | null>(null);
+
   const { data: savedGemini } = useQuery<{ value: string }>({
     queryKey: ["/api/settings/geminiApiKey"],
     retry: false,
     staleTime: Infinity,
   });
+
   const { data: savedGhToken } = useQuery<{ value: string }>({
     queryKey: ["/api/settings/githubToken"],
     retry: false,
     staleTime: Infinity,
   });
 
-  // Auto-fill from server if field is currently empty
   useEffect(() => {
     if (savedGemini?.value && !apiKey) {
       setApiKey(savedGemini.value);
       setGeminiSaved(true);
     }
-  }, [savedGemini]);
+  }, [savedGemini, apiKey]);
 
   useEffect(() => {
     if (savedGhToken?.value && !githubToken) {
       setGithubToken(savedGhToken.value);
       setGhSaved(true);
     }
-  }, [savedGhToken]);
+  }, [savedGhToken, githubToken]);
 
-  // Persist keys in session store so ReviewPage can read them
-  useEffect(() => { setSessionValue("geminiApiKey", apiKey); }, [apiKey]);
-  useEffect(() => { setSessionValue("githubToken", githubToken); }, [githubToken]);
+  useEffect(() => {
+    setSessionValue("geminiApiKey", apiKey);
+  }, [apiKey]);
 
-  // Reset saved indicator when user edits
-  useEffect(() => { setGeminiSaved(false); }, [apiKey]);
-  useEffect(() => { setGhSaved(false); }, [githubToken]);
+  useEffect(() => {
+    setSessionValue("githubToken", githubToken);
+  }, [githubToken]);
 
-  // Save key mutation
+  useEffect(() => {
+    setGeminiSaved(false);
+  }, [apiKey]);
+
+  useEffect(() => {
+    setGhSaved(false);
+  }, [githubToken]);
+
   const saveKeyMutation = useMutation({
     mutationFn: async ({ key, value }: { key: string; value: string }) =>
       await apiRequest("/api/settings", {
@@ -96,14 +103,20 @@ export default function GeneratePage() {
     if (!apiKey.trim()) return;
     await saveKeyMutation.mutateAsync({ key: "geminiApiKey", value: apiKey.trim() });
     setGeminiSaved(true);
-    toast({ title: "Gemini API 키 저장 완료", description: "다음 번 앱 로드 시 자동으로 채워집니다." });
+    toast({
+      title: "Gemini API 키 저장 완료",
+      description: "다음 번 앱 로드 시 자동으로 채워집니다.",
+    });
   };
 
   const handleSaveGhToken = async () => {
     if (!githubToken.trim()) return;
     await saveKeyMutation.mutateAsync({ key: "githubToken", value: githubToken.trim() });
     setGhSaved(true);
-    toast({ title: "GitHub 토큰 저장 완료", description: "다음 번 앱 로드 시 자동으로 채워집니다." });
+    toast({
+      title: "GitHub 토큰 저장 완료",
+      description: "다음 번 앱 로드 시 자동으로 채워집니다.",
+    });
   };
 
   const generateMutation = useMutation({
@@ -136,7 +149,6 @@ export default function GeneratePage() {
 
   return (
     <div className="max-w-2xl mx-auto animate-in space-y-8">
-      {/* Header */}
       <div className="space-y-1">
         <h1 className="text-xl font-bold" style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}>
           새 대본 생성
@@ -146,12 +158,39 @@ export default function GeneratePage() {
         </p>
       </div>
 
-      {/* Input section */}
+      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+        <div className="space-y-1">
+          <h2 className="text-base font-semibold">오늘의 핵심 뉴스 찾기</h2>
+          <p className="text-sm text-muted-foreground">
+            버튼을 누르면 먼저 테스트 문구가 표시됩니다. 다음 단계에서 실제 뉴스 불러오기를 붙입니다.
+          </p>
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setTodayNews("테스트 성공: 버튼이 정상 작동합니다. 다음 단계에서 실제 뉴스 데이터를 연결할게요.");
+          }}
+          data-testid="button-find-today-news"
+        >
+          오늘의 핵심 뉴스 찾기
+        </Button>
+
+        <div className="rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground min-h-[60px]">
+          {todayNews ?? "아직 불러온 뉴스가 없습니다."}
+        </div>
+      </div>
+
       <div className="rounded-xl border border-border bg-card p-6 space-y-5">
         <Tabs value={inputType} onValueChange={(v) => setInputType(v as "url" | "pasted_text")}>
           <TabsList className="w-full grid grid-cols-2" data-testid="tabs-input-type">
-            <TabsTrigger value="pasted_text" data-testid="tab-paste">텍스트 붙여넣기</TabsTrigger>
-            <TabsTrigger value="url" data-testid="tab-url">URL 입력</TabsTrigger>
+            <TabsTrigger value="pasted_text" data-testid="tab-paste">
+              텍스트 붙여넣기
+            </TabsTrigger>
+            <TabsTrigger value="url" data-testid="tab-url">
+              URL 입력
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="pasted_text" className="mt-4">
@@ -182,7 +221,6 @@ export default function GeneratePage() {
           </TabsContent>
         </Tabs>
 
-        {/* Tone + Angle */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label className="text-sm font-medium">톤</Label>
@@ -192,11 +230,14 @@ export default function GeneratePage() {
               </SelectTrigger>
               <SelectContent>
                 {TONES.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+
           <div className="space-y-1.5">
             <Label className="text-sm font-medium">시청자 관점</Label>
             <Select value={angle} onValueChange={setAngle}>
@@ -205,7 +246,9 @@ export default function GeneratePage() {
               </SelectTrigger>
               <SelectContent>
                 {ANGLES.map((a) => (
-                  <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+                  <SelectItem key={a.value} value={a.value}>
+                    {a.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -213,7 +256,6 @@ export default function GeneratePage() {
         </div>
       </div>
 
-      {/* API Key section */}
       <div className="rounded-xl border border-border bg-card p-6 space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-sm font-medium flex items-center gap-1.5">
@@ -227,6 +269,7 @@ export default function GeneratePage() {
           </Label>
           <span className="text-xs text-muted-foreground">서버에 저장, 자동 로드</span>
         </div>
+
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Input
@@ -246,6 +289,7 @@ export default function GeneratePage() {
               {showKey ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
+
           <Button
             type="button"
             variant="outline"
@@ -259,6 +303,7 @@ export default function GeneratePage() {
             <span className="ml-1.5 text-xs">{geminiSaved ? "저장됨" : "저장"}</span>
           </Button>
         </div>
+
         <p className="text-xs text-muted-foreground">
           처음 한 번만 입력하고 저장하면 이후 자동으로 채워집니다.{" "}
           <a
@@ -272,7 +317,6 @@ export default function GeneratePage() {
         </p>
       </div>
 
-      {/* GitHub Token section */}
       <div className="rounded-xl border border-border bg-card p-6 space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-sm font-medium flex items-center gap-1.5">
@@ -287,6 +331,7 @@ export default function GeneratePage() {
           </Label>
           <span className="text-xs text-muted-foreground">선택 — 승인 시 대본 자동 저장</span>
         </div>
+
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Input
@@ -306,6 +351,7 @@ export default function GeneratePage() {
               {showGhToken ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
+
           <Button
             type="button"
             variant="outline"
@@ -319,6 +365,7 @@ export default function GeneratePage() {
             <span className="ml-1.5 text-xs">{ghSaved ? "저장됨" : "저장"}</span>
           </Button>
         </div>
+
         <p className="text-xs text-muted-foreground">
           처음 한 번만 입력하고 저장하면 이후 자동으로 채워집니다.{" "}
           <a
@@ -332,7 +379,6 @@ export default function GeneratePage() {
         </p>
       </div>
 
-      {/* Generate button */}
       <Button
         onClick={() => generateMutation.mutate()}
         disabled={!canGenerate || generateMutation.isPending}
