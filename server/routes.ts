@@ -3,6 +3,76 @@ import { createServer } from "http";
 import { storage } from "./storage";
 import { randomUUID } from "crypto";
 
+// ── GitHub helper ────────────────────────────────────────────────────────────
+const GH_REPO = "NovisCoder/shortsnews";
+
+async function pushScriptToGitHub(
+  token: string,
+  projectId: string,
+  scriptJson: string,
+  topic: string,
+): Promise<{ ok: boolean; url?: string; error?: string }> {
+  // Build a nice filename: scripts/YYYY-MM-DD_topic-slug_projectId.json
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10);
+  const slug = topic
+    .replace(/[^가-힣a-zA-Z0-9\s]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .slice(0, 40);
+  const fileName = `scripts/${dateStr}_${slug}_${projectId.slice(0, 8)}.json`;
+
+  // Pretty-print the JSON
+  let prettyJson: string;
+  try {
+    prettyJson = JSON.stringify(JSON.parse(scriptJson), null, 2);
+  } catch {
+    prettyJson = scriptJson;
+  }
+
+  const content = Buffer.from(prettyJson).toString("base64");
+
+  // Check if file already exists (for update)
+  let sha: string | undefined;
+  try {
+    const existRes = await fetch(
+      `https://api.github.com/repos/${GH_REPO}/contents/${fileName}`,
+      { headers: { Authorization: `Bearer ${token}`, "User-Agent": "ShortsNews" } },
+    );
+    if (existRes.ok) {
+      const existData = (await existRes.json()) as { sha: string };
+      sha = existData.sha;
+    }
+  } catch { /* file doesn't exist yet */ }
+
+  const body: Record<string, string> = {
+    message: `script: ${topic} (${dateStr})`,
+    content,
+  };
+  if (sha) body.sha = sha;
+
+  const res = await fetch(
+    `https://api.github.com/repos/${GH_REPO}/contents/${fileName}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "User-Agent": "ShortsNews",
+      },
+      body: JSON.stringify(body),
+    },
+  );
+
+  if (!res.ok) {
+    const err = (await res.json()) as { message?: string };
+    return { ok: false, error: err?.message || `GitHub API ${res.status}` };
+  }
+
+  const data = (await res.json()) as { content?: { html_url?: string } };
+  return { ok: true, url: data?.content?.html_url };
+}
+
 // ── Prompt builder ────────────────────────────────────────────────────────────
 function buildPrompt(articleText: string, tone: string, angle: string | null): string {
   const toneLabel =
@@ -199,10 +269,32 @@ export function registerRoutes(httpServer: ReturnType<typeof createServer>, app:
   });
 
   // PATCH update project (review edits)
-  app.patch("/api/projects/:projectId", (req, res) => {
-    const updated = storage.updateProject(req.params.projectId, req.body);
+  app.patch("/api/projects/:projectId", async (req, res) => {
+    const { githubToken, ...updateData } = req.body;
+    const updated = storage.updateProject(req.params.projectId, updateData);
     if (!updated) return res.status(404).json({ error: "Not found" });
-    res.json(updated);
+
+    // Auto-push to GitHub when approved + token provided
+    let githubResult: { ok: boolean; url?: string; error?: string } | null = null;
+    if (updateData.reviewStatus === "approved" && githubToken) {
+      try {
+        let topic = "untitled";
+        try {
+          const parsed = JSON.parse(updated.scriptJson || "{}");
+          topic = parsed.topic || "untitled";
+        } catch { /* ignore */ }
+        githubResult = await pushScriptToGitHub(
+          githubToken,
+          updated.projectId,
+          updated.scriptJson || "{}",
+          topic,
+        );
+      } catch (e: unknown) {
+        githubResult = { ok: false, error: e instanceof Error ? e.message : String(e) };
+      }
+    }
+
+    res.json({ ...updated, github: githubResult });
   });
 
   // DELETE project

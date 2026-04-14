@@ -3,13 +3,14 @@ import { useHashLocation } from "wouter/use-hash-location";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getSessionValue } from "@/lib/sessionStore";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertTriangle, CheckCircle2, Download, Loader2,
-  ChevronRight, FileJson, Captions, ArrowLeft
+  ChevronRight, FileJson, Captions, ArrowLeft, Github
 } from "lucide-react";
 import type { Project } from "@shared/schema";
 import { Link } from "wouter";
@@ -84,15 +85,18 @@ export default function ReviewPage() {
     if (project?.editorNotes) setEditorNotes(project.editorNotes);
   }, [project]);
 
+  const githubToken = getSessionValue("githubToken");
+
   const approveMutation = useMutation({
     mutationFn: () =>
-      apiRequest<Project>(`/api/projects/${projectId}`, {
+      apiRequest<Project & { github?: { ok: boolean; url?: string; error?: string } }>(`/api/projects/${projectId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           reviewStatus: "approved",
           exportStatus: "approved",
           editorNotes,
+          githubToken: githubToken || undefined,
           // Merge edits back to scriptJson
           scriptJson: JSON.stringify({
             ...scriptData,
@@ -108,9 +112,16 @@ export default function ReviewPage() {
           }),
         }),
       }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["/api/projects"] });
-      toast({ title: "승인 완료", description: "export 준비 상태로 변경됩니다." });
+      const gh = (data as any)?.github;
+      if (gh?.ok) {
+        toast({ title: "승인 완료 + GitHub 저장", description: "대본이 scripts/ 폴더에 커밋되었습니다." });
+      } else if (gh?.error) {
+        toast({ title: "승인 완료", description: `GitHub 저장 실패: ${gh.error}`, variant: "destructive" });
+      } else {
+        toast({ title: "승인 완료", description: "export 준비 상태로 변경됩니다." });
+      }
     },
     onError: (err: Error) => toast({ title: "오류", description: err.message, variant: "destructive" }),
   });
@@ -352,6 +363,9 @@ export default function ReviewPage() {
             <CheckCircle2 size={16} className="mr-2" />
           )}
           검수 완료 / 승인
+          {githubToken && (
+            <Github size={14} className="ml-1.5 text-green-400" />
+          )}
         </Button>
 
         <Button variant="outline" onClick={handleExport} data-testid="button-export-json">

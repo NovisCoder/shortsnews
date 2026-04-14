@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
+import { setSessionValue, getSessionValue } from "@/lib/sessionStore";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -10,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, Eye, EyeOff } from "lucide-react";
+import { Loader2, Sparkles, Eye, EyeOff, Github } from "lucide-react";
 import type { Project } from "@shared/schema";
 
 const ANGLES = [
@@ -37,8 +38,14 @@ export default function GeneratePage() {
   const [sourceUrl, setSourceUrl] = useState("");
   const [tone, setTone] = useState("easy_explainer");
   const [angle, setAngle] = useState("none");
-  const [apiKey, setApiKey] = useState("");
+  const [apiKey, setApiKey] = useState(() => getSessionValue("geminiApiKey"));
   const [showKey, setShowKey] = useState(false);
+  const [githubToken, setGithubToken] = useState(() => getSessionValue("githubToken"));
+  const [showGhToken, setShowGhToken] = useState(false);
+
+  // Persist keys in session store so ReviewPage can read them
+  useEffect(() => { setSessionValue("geminiApiKey", apiKey); }, [apiKey]);
+  useEffect(() => { setSessionValue("githubToken", githubToken); }, [githubToken]);
 
   const generateMutation = useMutation({
     mutationFn: async () => {
@@ -182,6 +189,49 @@ export default function GeneratePage() {
             aistudio.google.com
           </a>
           에서 무료로 발급하세요.
+        </p>
+      </div>
+
+      {/* GitHub Token section */}
+      <div className="rounded-xl border border-border bg-card p-6 space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium flex items-center gap-1.5">
+            <Github size={14} />
+            GitHub Personal Access Token
+          </Label>
+          <span className="text-xs text-muted-foreground">선택 — 승인 시 대본 자동 저장</span>
+        </div>
+        <div className="relative">
+          <Input
+            type={showGhToken ? "text" : "password"}
+            placeholder="ghp_..."
+            value={githubToken}
+            onChange={(e) => setGithubToken(e.target.value)}
+            className="pr-10 font-mono text-sm"
+            data-testid="input-github-token"
+          />
+          <button
+            type="button"
+            onClick={() => setShowGhToken(!showGhToken)}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="button-toggle-gh-token"
+          >
+            {showGhToken ? <EyeOff size={15} /> : <Eye size={15} />}
+          </button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          입력 시 승인된 대본이 GitHub 레포{" "}
+          <code className="text-primary/80">scripts/</code> 폴더에 자동 커밋됩니다.
+          토큰은{" "}
+          <a
+            href="https://github.com/settings/tokens/new?scopes=repo&description=ShortsNews"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline"
+          >
+            여기서 생성
+          </a>
+          하세요. (repo 권한 필요)
         </p>
       </div>
 
