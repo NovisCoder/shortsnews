@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useHashLocation } from "wouter/use-hash-location";
 import { setSessionValue, getSessionValue } from "../lib/sessionStore";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -59,6 +59,21 @@ type TodayNewsResponse = {
   }>;
 };
 
+type Rss2JsonItem = {
+  title?: string;
+  link?: string;
+  pubDate?: string;
+  author?: string;
+};
+
+type Rss2JsonResponse = {
+  status: string;
+  items?: Rss2JsonItem[];
+  feed?: {
+    title?: string;
+  };
+};
+
 export default function GeneratePage() {
   const [, navigate] = useHashLocation();
   const { toast } = useToast();
@@ -76,7 +91,9 @@ export default function GeneratePage() {
 
   const [geminiSaved, setGeminiSaved] = useState(false);
   const [ghSaved, setGhSaved] = useState(false);
+
   const [todayNews, setTodayNews] = useState<TodayNewsResponse | null>(null);
+  const [todayNewsLoading, setTodayNewsLoading] = useState(false);
 
   const { data: savedGemini } = useQuery<{ value: string }>({
     queryKey: ["/api/settings/geminiApiKey"],
@@ -131,7 +148,10 @@ export default function GeneratePage() {
 
   const handleSaveGemini = async () => {
     if (!apiKey.trim()) return;
-    await saveKeyMutation.mutateAsync({ key: "geminiApiKey", value: apiKey.trim() });
+    await saveKeyMutation.mutateAsync({
+      key: "geminiApiKey",
+      value: apiKey.trim(),
+    });
     setGeminiSaved(true);
     toast({
       title: "Gemini API 키 저장 완료",
@@ -141,7 +161,10 @@ export default function GeneratePage() {
 
   const handleSaveGhToken = async () => {
     if (!githubToken.trim()) return;
-    await saveKeyMutation.mutateAsync({ key: "githubToken", value: githubToken.trim() });
+    await saveKeyMutation.mutateAsync({
+      key: "githubToken",
+      value: githubToken.trim(),
+    });
     setGhSaved(true);
     toast({
       title: "GitHub 토큰 저장 완료",
@@ -149,25 +172,71 @@ export default function GeneratePage() {
     });
   };
 
-  const todayNewsMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest<TodayNewsResponse>("/api/today-news");
-    },
-    onSuccess: (data) => {
-      setTodayNews(data);
+  const handleFetchTodayNews = async () => {
+    try {
+      setTodayNewsLoading(true);
+
+      const googleNewsRssUrl =
+        "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko";
+      const rssToJsonUrl =
+        `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(
+          googleNewsRssUrl
+        )}`;
+
+      const response = await fetch(rssToJsonUrl);
+      if (!response.ok) {
+        throw new Error(`RSS 요청 실패 (${response.status})`);
+      }
+
+      const data: Rss2JsonResponse = await response.json();
+
+      if (data.status !== "ok" || !data.items || data.items.length === 0) {
+        throw new Error("뉴스 데이터를 불러오지 못했습니다.");
+      }
+
+      const articles = data.items.slice(0, 5).map((item) => ({
+        title: item.title || "제목 없음",
+        url: item.link || "#",
+        source: "Google News",
+        publishedAt: item.pubDate,
+      }));
+
+      const first = articles[0];
+
+      const headline = first?.title || "오늘의 핵심 뉴스";
+      const summary =
+        "오늘 많이 다뤄지는 이슈를 기준으로 관련 기사들을 모아봤어요. 아래 링크를 눌러 원문을 확인할 수 있습니다.";
+
+      const keywords = headline
+        .split(/[,\-\|\·\[\]\(\)\/\s]+/)
+        .map((word) => word.trim())
+        .filter((word) => word.length >= 2)
+        .slice(0, 5);
+
+      setTodayNews({
+        headline,
+        summary,
+        keywords,
+        articles,
+      });
+
       toast({
         title: "오늘의 핵심 뉴스 불러오기 완료",
-        description: "대표 이슈와 관련 기사들을 가져왔어요.",
+        description: "대표 기사와 관련 기사 목록을 가져왔어요.",
       });
-    },
-    onError: (err: Error) => {
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.";
+
       toast({
         title: "뉴스 불러오기 실패",
-        description: err.message,
+        description: message,
         variant: "destructive",
       });
-    },
-  });
+    } finally {
+      setTodayNewsLoading(false);
+    }
+  };
 
   const generateMutation = useMutation({
     mutationFn: async () => {
@@ -202,7 +271,9 @@ export default function GeneratePage() {
 
   const canGenerate =
     apiKey.trim().length > 10 &&
-    (inputType === "url" ? sourceUrl.trim().length > 5 : rawText.trim().length > 30);
+    (inputType === "url"
+      ? sourceUrl.trim().length > 5
+      : rawText.trim().length > 30);
 
   return (
     <div className="max-w-2xl mx-auto animate-in space-y-8">
@@ -222,18 +293,18 @@ export default function GeneratePage() {
         <div className="space-y-1">
           <h2 className="text-base font-semibold">오늘의 핵심 뉴스 찾기</h2>
           <p className="text-sm text-muted-foreground">
-            버튼을 누르면 오늘의 대표 이슈 1건과 관련 기사들을 자동으로 불러옵니다.
+            GitHub Pages에서도 동작하도록 브라우저에서 직접 뉴스 RSS를 읽습니다.
           </p>
         </div>
 
         <Button
           type="button"
           variant="outline"
-          onClick={() => todayNewsMutation.mutate()}
-          disabled={todayNewsMutation.isPending}
+          onClick={handleFetchTodayNews}
+          disabled={todayNewsLoading}
           data-testid="button-find-today-news"
         >
-          {todayNewsMutation.isPending ? (
+          {todayNewsLoading ? (
             <>
               <Loader2 size={16} className="mr-2 animate-spin" />
               불러오는 중...
@@ -245,7 +316,7 @@ export default function GeneratePage() {
 
         <div className="rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground min-h-[100px] space-y-3">
           {!todayNews ? (
-            <p>버튼을 누르면 오늘 가장 중요한 뉴스 1건과 관련 기사들을 불러옵니다.</p>
+            <p>버튼을 누르면 오늘 많이 다뤄지는 뉴스 기사 목록을 불러옵니다.</p>
           ) : (
             <>
               <div className="space-y-1">
@@ -270,7 +341,7 @@ export default function GeneratePage() {
 
               {!!todayNews.articles?.length && (
                 <div className="space-y-2 pt-1">
-                  {todayNews.articles.slice(0, 5).map((article) => (
+                  {todayNews.articles.map((article) => (
                     <a
                       key={article.url}
                       href={article.url}
