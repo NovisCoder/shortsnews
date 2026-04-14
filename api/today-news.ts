@@ -28,7 +28,7 @@ export default async function handler(req: Request) {
 
     const data = await response.json();
 
-    if (data.status !== "ok" || !data.items || data.items.length === 0) {
+    if (!data.items || data.items.length === 0) {
       throw new Error("뉴스 데이터를 불러오지 못했습니다.");
     }
 
@@ -39,11 +39,11 @@ export default async function handler(req: Request) {
       publishedAt: item.pubDate,
     }));
 
-    const first = articles;
+    const first = articles[0];
     const headline = first?.title || "오늘의 핵심 뉴스";
 
     const keywords = headline
-      .split(/[,\-\|\·\[\]\(\)\/\s]+/)
+      .split(/[,\-|\·\[\]\(\)\/\s]+/)
       .map((word: string) => word.trim())
       .filter((word: string) => word.length >= 2)
       .slice(0, 5);
@@ -70,17 +70,12 @@ export default async function handler(req: Request) {
     const message =
       error instanceof Error ? error.message : "알 수 없는 오류";
 
-    return new Response(
-      JSON.stringify({
-        message,
-      }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
+    return new Response(JSON.stringify({ message }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
   }
 }
