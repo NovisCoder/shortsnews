@@ -1,3 +1,4 @@
+import React from "react";
 import { Link } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
 import { Tv2, History, Plus, Moon, Sun } from "lucide-react";
