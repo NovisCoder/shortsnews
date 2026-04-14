@@ -1,0 +1,140 @@
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* News-media palette: deep navy + electric cyan accent */
+    --background: 222 20% 8%;
+    --foreground: 210 15% 92%;
+
+    --card: 222 18% 11%;
+    --card-foreground: 210 15% 92%;
+
+    --popover: 222 18% 11%;
+    --popover-foreground: 210 15% 92%;
+
+    --primary: 186 90% 45%;
+    --primary-foreground: 222 20% 8%;
+
+    --secondary: 222 15% 18%;
+    --secondary-foreground: 210 15% 80%;
+
+    --muted: 222 15% 16%;
+    --muted-foreground: 210 10% 55%;
+
+    --accent: 186 90% 45%;
+    --accent-foreground: 222 20% 8%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 222 15% 20%;
+    --input: 222 15% 20%;
+    --ring: 186 90% 45%;
+
+    --radius: 0.5rem;
+
+    /* Warning / flags */
+    --warning: 38 92% 50%;
+    --success: 142 71% 45%;
+  }
+
+  /* Light mode variant */
+  .light {
+    --background: 210 20% 98%;
+    --foreground: 222 25% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 25% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 25% 10%;
+    --primary: 186 90% 30%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 15% 94%;
+    --secondary-foreground: 222 20% 25%;
+    --muted: 210 15% 92%;
+    --muted-foreground: 210 10% 45%;
+    --accent: 186 90% 30%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 15% 85%;
+    --input: 210 15% 85%;
+    --ring: 186 90% 30%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Satoshi', 'Inter', sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    min-height: 100dvh;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Cabinet Grotesk', 'Satoshi', sans-serif;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  p, li {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: hsl(var(--background)); }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+}
+
+/* ─── Animations ───────────────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+  animation: fadeIn 0.25s ease forwards;
+}
+
+/* ─── Script section blocks ────────────────────────────────────────────────── */
+.script-block {
+  @apply rounded-lg border border-border bg-card p-4 space-y-2;
+}
+
+.script-label {
+  @apply text-xs font-semibold uppercase tracking-widest text-muted-foreground;
+}
+
+/* ─── Flag badges ──────────────────────────────────────────────────────────── */
+.flag-badge {
+  @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  background: hsl(var(--warning) / 0.15);
+  color: hsl(var(--warning));
+  border: 1px solid hsl(var(--warning) / 0.3);
+}
