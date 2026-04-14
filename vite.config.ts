@@ -9,7 +9,16 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   root: path.resolve(__dirname, "client"),
   base: "/shortsnews/",
-  plugins: [react()],
+  plugins: [
+    react({
+      jsxRuntime: "automatic",
+      jsxImportSource: "react",
+    }),
+  ],
+  esbuild: {
+    jsx: "automatic",
+    jsxImportSource: "react",
+  },
   build: {
     outDir: path.resolve(__dirname, "dist"),
     emptyOutDir: true,
