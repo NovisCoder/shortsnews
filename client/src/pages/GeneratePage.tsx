@@ -41,7 +41,17 @@ const ANGLES = [
   { value: "정치", label: "정치 관심자" },
   { value: "글로벌", label: "글로벌 관점" },
 ];
-
+type TodayNewsResponse = {
+  headline: string;
+  summary: string;
+  keywords: string[];
+  articles: Array<{
+    title: string;
+    url: string;
+    source?: string;
+    publishedAt?: string;
+  }>;
+};
 const TONES = [
   { value: "easy_explainer", label: "쉬운 설명체" },
   { value: "neutral_news", label: "중립적 뉴스체" },
@@ -66,7 +76,7 @@ export default function GeneratePage() {
   const [geminiSaved, setGeminiSaved] = useState(false);
   const [ghSaved, setGhSaved] = useState(false);
 
-  const [todayNews, setTodayNews] = useState<string | null>(null);
+ const [todayNews, setTodayNews] = useState<TodayNewsResponse | null>(null);
 
   const { data: savedGemini } = useQuery<{ value: string }>({
     queryKey: ["/api/settings/geminiApiKey"],
