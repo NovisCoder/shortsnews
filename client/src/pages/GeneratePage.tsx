@@ -59,21 +59,6 @@ type TodayNewsResponse = {
   }>;
 };
 
-type Rss2JsonItem = {
-  title?: string;
-  link?: string;
-  pubDate?: string;
-  author?: string;
-};
-
-type Rss2JsonResponse = {
-  status: string;
-  items?: Rss2JsonItem[];
-  feed?: {
-    title?: string;
-  };
-};
-
 export default function GeneratePage() {
   const [, navigate] = useHashLocation();
   const { toast } = useToast();
@@ -176,53 +161,38 @@ export default function GeneratePage() {
     try {
       setTodayNewsLoading(true);
 
-      const googleNewsRssUrl =
-        "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko";
-      const rssToJsonUrl =
-        `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(
-          googleNewsRssUrl
-        )}`;
-
-      const response = await fetch(rssToJsonUrl);
-      if (!response.ok) {
-        throw new Error(`RSS 요청 실패 (${response.status})`);
-      }
-
-      const data: Rss2JsonResponse = await response.json();
-
-      if (data.status !== "ok" || !data.items || data.items.length === 0) {
-        throw new Error("뉴스 데이터를 불러오지 못했습니다.");
-      }
-
-      const articles = data.items.slice(0, 5).map((item) => ({
-        title: item.title || "제목 없음",
-        url: item.link || "#",
-        source: "Google News",
-        publishedAt: item.pubDate,
-      }));
-
-      const first = articles[0];
-
-      const headline = first?.title || "오늘의 핵심 뉴스";
-      const summary =
-        "오늘 많이 다뤄지는 이슈를 기준으로 관련 기사들을 모아봤어요. 아래 링크를 눌러 원문을 확인할 수 있습니다.";
-
-      const keywords = headline
-        .split(/[,\-\|\·\[\]\(\)\/\s]+/)
-        .map((word) => word.trim())
-        .filter((word) => word.length >= 2)
-        .slice(0, 5);
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       setTodayNews({
-        headline,
-        summary,
-        keywords,
-        articles,
+        headline: "오늘의 테스트 핵심 뉴스: 금리·물가·부동산 이슈 정리",
+        summary:
+          "현재는 GitHub Pages 환경에서 동작 확인을 위한 테스트 데이터가 표시되고 있습니다. 버튼 클릭, 상태 변경, 카드 렌더링이 정상인지 먼저 확인하는 단계입니다.",
+        keywords: ["금리", "물가", "부동산", "한국경제", "테스트"],
+        articles: [
+          {
+            title: "테스트 기사 1: 기준금리 동결이 시장에 미치는 영향",
+            url: "https://example.com/test-news-1",
+            source: "테스트 데이터",
+            publishedAt: "2026-04-14T17:00:00+09:00",
+          },
+          {
+            title: "테스트 기사 2: 소비자물가 흐름과 체감 경기 변화",
+            url: "https://example.com/test-news-2",
+            source: "테스트 데이터",
+            publishedAt: "2026-04-14T17:01:00+09:00",
+          },
+          {
+            title: "테스트 기사 3: 부동산 시장 관망세 이어지나",
+            url: "https://example.com/test-news-3",
+            source: "테스트 데이터",
+            publishedAt: "2026-04-14T17:02:00+09:00",
+          },
+        ],
       });
 
       toast({
         title: "오늘의 핵심 뉴스 불러오기 완료",
-        description: "대표 기사와 관련 기사 목록을 가져왔어요.",
+        description: "테스트 데이터가 정상 표시되었습니다.",
       });
     } catch (err) {
       const message =
@@ -293,7 +263,7 @@ export default function GeneratePage() {
         <div className="space-y-1">
           <h2 className="text-base font-semibold">오늘의 핵심 뉴스 찾기</h2>
           <p className="text-sm text-muted-foreground">
-            GitHub Pages에서도 동작하도록 브라우저에서 직접 뉴스 RSS를 읽습니다.
+            현재는 외부 호출 없이 GitHub Pages에서 동작 확인용 테스트 데이터를 표시합니다.
           </p>
         </div>
 
@@ -316,7 +286,7 @@ export default function GeneratePage() {
 
         <div className="rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground min-h-[100px] space-y-3">
           {!todayNews ? (
-            <p>버튼을 누르면 오늘 많이 다뤄지는 뉴스 기사 목록을 불러옵니다.</p>
+            <p>버튼을 누르면 테스트 뉴스 카드가 표시됩니다.</p>
           ) : (
             <>
               <div className="space-y-1">
