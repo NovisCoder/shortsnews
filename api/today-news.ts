@@ -39,7 +39,7 @@ export default async function handler(req: Request) {
       publishedAt: item.pubDate,
     }));
 
-    const first = articles[0];
+    const first = articles;
     const headline = first?.title || "오늘의 핵심 뉴스";
 
     const keywords = headline
