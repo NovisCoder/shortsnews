@@ -214,16 +214,22 @@ const todayNewsMutation = useMutation({
           </p>
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => {
-            setTodayNews("테스트 성공: 버튼이 정상 작동합니다. 다음 단계에서 실제 뉴스 데이터를 연결할게요.");
-          }}
-          data-testid="button-find-today-news"
-        >
-          오늘의 핵심 뉴스 찾기
-        </Button>
+       <Button
+  type="button"
+  variant="outline"
+  onClick={() => todayNewsMutation.mutate()}
+  disabled={todayNewsMutation.isPending}
+  data-testid="button-find-today-news"
+>
+  {todayNewsMutation.isPending ? (
+    <>
+      <Loader2 size={16} className="mr-2 animate-spin" />
+      불러오는 중...
+    </>
+  ) : (
+    "오늘의 핵심 뉴스 찾기"
+  )}
+</Button>
 
         <div className="rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground min-h-[60px]">
           {todayNews ?? "아직 불러온 뉴스가 없습니다."}
