@@ -1,3 +1,4 @@
+import React from "react";
 import { useRoute, Link } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
