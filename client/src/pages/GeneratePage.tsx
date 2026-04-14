@@ -1,5 +1,4 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useHashLocation } from "wouter/use-hash-location";
 import { setSessionValue, getSessionValue } from "../lib/sessionStore";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -41,6 +40,13 @@ const ANGLES = [
   { value: "정치", label: "정치 관심자" },
   { value: "글로벌", label: "글로벌 관점" },
 ];
+
+const TONES = [
+  { value: "easy_explainer", label: "쉬운 설명체" },
+  { value: "neutral_news", label: "중립적 뉴스체" },
+  { value: "daily_conversation", label: "일상 대화체" },
+];
+
 type TodayNewsResponse = {
   headline: string;
   summary: string;
@@ -52,11 +58,6 @@ type TodayNewsResponse = {
     publishedAt?: string;
   }>;
 };
-const TONES = [
-  { value: "easy_explainer", label: "쉬운 설명체" },
-  { value: "neutral_news", label: "중립적 뉴스체" },
-  { value: "daily_conversation", label: "일상 대화체" },
-];
 
 export default function GeneratePage() {
   const [, navigate] = useHashLocation();
@@ -75,8 +76,7 @@ export default function GeneratePage() {
 
   const [geminiSaved, setGeminiSaved] = useState(false);
   const [ghSaved, setGhSaved] = useState(false);
-
- const [todayNews, setTodayNews] = useState<TodayNewsResponse | null>(null);
+  const [todayNews, setTodayNews] = useState<TodayNewsResponse | null>(null);
 
   const { data: savedGemini } = useQuery<{ value: string }>({
     queryKey: ["/api/settings/geminiApiKey"],
@@ -148,25 +148,27 @@ export default function GeneratePage() {
       description: "다음 번 앱 로드 시 자동으로 채워집니다.",
     });
   };
-const todayNewsMutation = useMutation({
-  mutationFn: async () => {
-    return await apiRequest<TodayNewsResponse>("/api/today-news");
-  },
-  onSuccess: (data) => {
-    setTodayNews(data);
-    toast({
-      title: "오늘의 핵심 뉴스 불러오기 완료",
-      description: "대표 이슈와 관련 기사들을 가져왔어요.",
-    });
-  },
-  onError: (err: Error) => {
-    toast({
-      title: "뉴스 불러오기 실패",
-      description: err.message,
-      variant: "destructive",
-    });
-  },
-});
+
+  const todayNewsMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest<TodayNewsResponse>("/api/today-news");
+    },
+    onSuccess: (data) => {
+      setTodayNews(data);
+      toast({
+        title: "오늘의 핵심 뉴스 불러오기 완료",
+        description: "대표 이슈와 관련 기사들을 가져왔어요.",
+      });
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "뉴스 불러오기 실패",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const generateMutation = useMutation({
     mutationFn: async () => {
       return await apiRequest<Project>("/api/generate", {
@@ -183,11 +185,18 @@ const todayNewsMutation = useMutation({
       });
     },
     onSuccess: (project) => {
-      toast({ title: "대본 생성 완료", description: "검수 화면으로 이동합니다." });
+      toast({
+        title: "대본 생성 완료",
+        description: "검수 화면으로 이동합니다.",
+      });
       navigate(`/review/${project.projectId}`);
     },
     onError: (err: Error) => {
-      toast({ title: "생성 실패", description: err.message, variant: "destructive" });
+      toast({
+        title: "생성 실패",
+        description: err.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -198,7 +207,10 @@ const todayNewsMutation = useMutation({
   return (
     <div className="max-w-2xl mx-auto animate-in space-y-8">
       <div className="space-y-1">
-        <h1 className="text-xl font-bold" style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}>
+        <h1
+          className="text-xl font-bold"
+          style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}
+        >
           새 대본 생성
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -210,34 +222,84 @@ const todayNewsMutation = useMutation({
         <div className="space-y-1">
           <h2 className="text-base font-semibold">오늘의 핵심 뉴스 찾기</h2>
           <p className="text-sm text-muted-foreground">
-            버튼을 누르면 먼저 테스트 문구가 표시됩니다. 다음 단계에서 실제 뉴스 불러오기를 붙입니다.
+            버튼을 누르면 오늘의 대표 이슈 1건과 관련 기사들을 자동으로 불러옵니다.
           </p>
         </div>
 
-       <Button
-  type="button"
-  variant="outline"
-  onClick={() => todayNewsMutation.mutate()}
-  disabled={todayNewsMutation.isPending}
-  data-testid="button-find-today-news"
->
-  {todayNewsMutation.isPending ? (
-    <>
-      <Loader2 size={16} className="mr-2 animate-spin" />
-      불러오는 중...
-    </>
-  ) : (
-    "오늘의 핵심 뉴스 찾기"
-  )}
-</Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => todayNewsMutation.mutate()}
+          disabled={todayNewsMutation.isPending}
+          data-testid="button-find-today-news"
+        >
+          {todayNewsMutation.isPending ? (
+            <>
+              <Loader2 size={16} className="mr-2 animate-spin" />
+              불러오는 중...
+            </>
+          ) : (
+            "오늘의 핵심 뉴스 찾기"
+          )}
+        </Button>
 
-        <div className="rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground min-h-[60px]">
-          {todayNews ?? "아직 불러온 뉴스가 없습니다."}
+        <div className="rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground min-h-[100px] space-y-3">
+          {!todayNews ? (
+            <p>버튼을 누르면 오늘 가장 중요한 뉴스 1건과 관련 기사들을 불러옵니다.</p>
+          ) : (
+            <>
+              <div className="space-y-1">
+                <p className="text-base font-semibold text-foreground">
+                  {todayNews.headline}
+                </p>
+                <p>{todayNews.summary}</p>
+              </div>
+
+              {!!todayNews.keywords?.length && (
+                <div className="flex flex-wrap gap-2">
+                  {todayNews.keywords.map((keyword) => (
+                    <span
+                      key={keyword}
+                      className="px-2 py-1 rounded-md bg-background border border-border text-xs text-foreground"
+                    >
+                      {keyword}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {!!todayNews.articles?.length && (
+                <div className="space-y-2 pt-1">
+                  {todayNews.articles.slice(0, 5).map((article) => (
+                    <a
+                      key={article.url}
+                      href={article.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block rounded-md border border-border bg-background px-3 py-2 hover:border-primary/40 transition-colors"
+                    >
+                      <p className="text-sm text-foreground font-medium">
+                        {article.title}
+                      </p>
+                      {article.source && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {article.source}
+                        </p>
+                      )}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
       <div className="rounded-xl border border-border bg-card p-6 space-y-5">
-        <Tabs value={inputType} onValueChange={(v) => setInputType(v as "url" | "pasted_text")}>
+        <Tabs
+          value={inputType}
+          onValueChange={(v) => setInputType(v as "url" | "pasted_text")}
+        >
           <TabsList className="w-full grid grid-cols-2" data-testid="tabs-input-type">
             <TabsTrigger value="pasted_text" data-testid="tab-paste">
               텍스트 붙여넣기
@@ -353,7 +415,11 @@ const todayNewsMutation = useMutation({
             className="shrink-0 px-3"
             data-testid="button-save-gemini"
           >
-            {geminiSaved ? <CheckCircle2 size={14} className="text-green-600" /> : <Save size={14} />}
+            {geminiSaved ? (
+              <CheckCircle2 size={14} className="text-green-600" />
+            ) : (
+              <Save size={14} />
+            )}
             <span className="ml-1.5 text-xs">{geminiSaved ? "저장됨" : "저장"}</span>
           </Button>
         </div>
@@ -383,7 +449,9 @@ const todayNewsMutation = useMutation({
               </span>
             )}
           </Label>
-          <span className="text-xs text-muted-foreground">선택 — 승인 시 대본 자동 저장</span>
+          <span className="text-xs text-muted-foreground">
+            선택 — 승인 시 대본 자동 저장
+          </span>
         </div>
 
         <div className="flex gap-2">
@@ -415,7 +483,11 @@ const todayNewsMutation = useMutation({
             className="shrink-0 px-3"
             data-testid="button-save-gh-token"
           >
-            {ghSaved ? <CheckCircle2 size={14} className="text-green-600" /> : <Save size={14} />}
+            {ghSaved ? (
+              <CheckCircle2 size={14} className="text-green-600" />
+            ) : (
+              <Save size={14} />
+            )}
             <span className="ml-1.5 text-xs">{ghSaved ? "저장됨" : "저장"}</span>
           </Button>
         </div>
