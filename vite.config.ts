@@ -10,11 +10,6 @@ export default defineConfig({
   root: path.resolve(__dirname, "client"),
   base: "/shortsnews/",
   plugins: [react()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "client/src"),
-    },
-  },
   build: {
     outDir: path.resolve(__dirname, "dist"),
     emptyOutDir: true,
