@@ -375,9 +375,9 @@ export function registerRoutes(httpServer: ReturnType<typeof createServer>, app:
   });
 
   // ─── Video generation ──────────────────────────────────────────────
-  const { spawn } = require("child_process");
   const path = require("path");
   const fs = require("fs");
+  const { generateVideo } = require("./video_pipeline");
 
   // Track active video jobs
   const videoJobs = new Map<string, { status: string; progress: string[]; outputPath?: string; error?: string }>();
@@ -391,69 +391,24 @@ export function registerRoutes(httpServer: ReturnType<typeof createServer>, app:
     const tmpDir = `/tmp/shortsnews_videos`;
     if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
 
-    const projectJsonPath = path.join(tmpDir, `${jobId}_input.json`);
     const outputPath = path.join(tmpDir, `${jobId}.mp4`);
-
-    // Write project data for Python script
     const scriptData = project.scriptJson ? JSON.parse(project.scriptJson) : {};
-    fs.writeFileSync(projectJsonPath, JSON.stringify({
-      projectId: project.projectId,
-      scriptData,
-      articleTitle: project.articleTitle,
-    }));
 
-    videoJobs.set(jobId, { status: "running", progress: [] });
+    // Gemini API key from saved settings or request body
+    const apiKey = storage.getSetting("geminiApiKey") || req.body?.apiKey || "";
+    if (!apiKey) {
+      return res.status(400).json({ error: "Gemini API 키가 없습니다. 설정에서 저장해주세요." });
+    }
 
-    const voice = req.body?.voice || "kore";
-    const pythonScript = path.join(__dirname, "make_video.py");
+    const voice = req.body?.voice || "Kore";
+    const job = { status: "running", progress: [] as string[] };
+    videoJobs.set(jobId, job);
 
-    const child = spawn("python3", [
-      pythonScript,
-      "--project-json", projectJsonPath,
-      "--output", outputPath,
-      "--voice", voice,
-    ], {
-      cwd: __dirname,
-      env: { ...process.env },
-    });
-
-    child.stdout.on("data", (data: Buffer) => {
-      const lines = data.toString().split("\n").filter(Boolean);
-      for (const line of lines) {
-        try {
-          const msg = JSON.parse(line);
-          const job = videoJobs.get(jobId);
-          if (!job) continue;
-          if (msg.type === "progress") {
-            job.progress.push(msg.message);
-          } else if (msg.type === "done") {
-            job.status = "done";
-            job.outputPath = outputPath;
-          } else if (msg.type === "error") {
-            job.status = "error";
-            job.error = msg.message;
-          }
-        } catch {
-          // non-JSON output, ignore
-        }
-      }
-    });
-
-    child.stderr.on("data", (data: Buffer) => {
-      // Python stderr (warnings etc) — log but don't fail
-      console.error(`[video:${jobId}] ${data.toString().slice(0, 200)}`);
-    });
-
-    child.on("close", (code: number) => {
-      const job = videoJobs.get(jobId);
-      if (job && job.status === "running") {
-        if (code === 0) {
-          job.status = "done";
-          job.outputPath = outputPath;
-        } else {
-          job.status = "error";
-          job.error = `Process exited with code ${code}`;
-        }
+    // Run async pipeline (non-blocking)
+    generateVideo({ scriptData, apiKey, voice, outputPath, job }).catch((err: Error) => {
+      if (job.status === "running") {
+        job.status = "error";
+        (job as any).error = err.message;
       }
     });
 

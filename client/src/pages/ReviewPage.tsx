@@ -395,17 +395,17 @@ export default function ReviewPage() {
 
 // ─── Video Generation Section ──────────────────────────────────────────────
 const VOICE_OPTIONS = [
-  { value: "kore", label: "Kore (여성, 차분)" },
-  { value: "charon", label: "Charon (남성, 낮은)" },
-  { value: "fenrir", label: "Fenrir (남성, 밝은)" },
-  { value: "aoede", label: "Aoede (여성, 밝은)" },
-  { value: "puck", label: "Puck (남성, 캐주얼)" },
+  { value: "Kore", label: "Kore (여성, 차분)" },
+  { value: "Charon", label: "Charon (남성, 낮은)" },
+  { value: "Fenrir", label: "Fenrir (남성, 밝은)" },
+  { value: "Aoede", label: "Aoede (여성, 밝은)" },
+  { value: "Puck", label: "Puck (남성, 캐주얼)" },
 ];
 
 function VideoSection({ projectId }: { projectId: string }) {
   const { toast } = useToast();
   const [videoJobId, setVideoJobId] = useState<string | null>(null);
-  const [selectedVoice, setSelectedVoice] = useState("kore");
+  const [selectedVoice, setSelectedVoice] = useState("Kore");
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Poll job status
