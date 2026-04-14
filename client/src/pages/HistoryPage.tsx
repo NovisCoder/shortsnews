@@ -1,13 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest } from "../lib/queryClient";
 import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
 import { Loader2, FileJson, Trash2, ChevronRight, Plus } from "lucide-react";
-import type { Project } from "@shared/schema";
+import type { Project } from "../../../shared/schema";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "../hooks/use-toast";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   draft: { label: "초안", color: "text-muted-foreground border-muted-foreground/30 bg-muted-foreground/10" },
