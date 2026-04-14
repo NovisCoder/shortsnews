@@ -2,6 +2,13 @@
 
 뉴스 기사 URL 또는 텍스트 → 60초 유튜브 쇼츠 대본 자동 생성 도구
 
+## 🚀 바로 실행
+
+[![Open App](https://img.shields.io/badge/▶%20앱%20바로가기-쇼츠뉴스-blue?style=for-the-badge)](https://www.perplexity.ai/computer/a/syoceunyuseu-mvp-u_jc8aO7RwmDMPEAWFqerA)
+
+> **링크 클릭 → Perplexity Computer 앱이 바로 열립니다.**  
+> Gemini API 키와 (선택) GitHub 토큰만 입력하면 바로 사용 가능합니다.
+
 ## 로컬 실행 방법
 
 ### 사전 준비
