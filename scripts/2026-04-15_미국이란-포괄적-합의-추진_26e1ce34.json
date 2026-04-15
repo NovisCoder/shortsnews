@@ -1,0 +1,263 @@
+{
+  "topic": "미국-이란, '포괄적 합의' 추진",
+  "summary_line": "미국 부통령이 트럼프 대통령이 이란과의 '포괄적 합의'를 원한다고 밝히며 2차 회담 가능성이 주목받고 있습니다.",
+  "key_points": [
+    "트럼프, '작은 합의' 대신 '포괄적 합의' 원해",
+    "미-이란, 2차 회담 가능성 시사",
+    "핵무기 보유 금지 합의 목표"
+  ],
+  "script": {
+    "opening": "오늘 기억해둘만한 뉴스, 쇼츠뉴스가 알려드립니다.",
+    "topic_intro": "미국과 이란 사이에서 새로운 외교 움직임이 포착되고 있습니다.",
+    "summary_intro": "제이디 밴스 미국 부통령은 트럼프 대통령이 이란과의 '작은 합의'가 아닌, '포괄적인 합의'를 원한다고 밝혔습니다.",
+    "what_happened": [
+      "밴스 부통령은 이란과의 회담에서 큰 진전이 있었지만, 협상이 타결되지 않은 이유는 트럼프 대통령이 이란의 핵무기 보유를 막는 합의를 진심으로 원하기 때문이라고 설명했습니다.",
+      "트럼프 대통령 역시 2차 회담 가능성을 시사하며 '앞으로 이틀 안에 뭔가 진전이 있을 수 있다'고 말했습니다.",
+      "지난 11~12일 파키스탄에서 열린 1차 회담에 이어, 2차 회담이 성사될 경우 밴스 부통령이 다시 협상단 대표를 맡을 가능성이 높습니다."
+    ],
+    "daily_impact": [
+      "이번 움직임은 중동 지역의 긴장 완화와 국제 사회의 핵 확산 방지에 중요한 영향을 미칠 수 있습니다.",
+      "향후 회담 결과에 따라 국제 유가나 에너지 시장에도 변화가 있을 수 있어 주목됩니다."
+    ],
+    "flex_intro": "오늘의 뉴스를 아는 척 하고 싶으시다면 이렇게 말해보세요.",
+    "flex_line": "트럼프 대통령이 '그랜드 바겐'을 원한다는 밴스 부통령의 발언처럼, 이번 미-이란 회담은 단순히 국지적인 문제가 아닌, 핵무기 보유 금지를 포함한 포괄적인 합의를 목표로 하고 있다고 하네요.",
+    "search_intro": "더 자세히 알아보고 싶으시다면, 3가지 키워드를 검색해보세요!",
+    "search_keywords_ko": [
+      "미국 이란",
+      "포괄적 합의",
+      "제이디 밴스"
+    ]
+  },
+  "subtitles_ko": [
+    {
+      "id": 1,
+      "text": "미국과 이란 사이에서 새로운 외교 움직임이 포착되고 있습니다.",
+      "start_sec": 0,
+      "end_sec": 3
+    },
+    {
+      "id": 2,
+      "text": "제이디 밴스 미국 부통령은",
+      "start_sec": 3,
+      "end_sec": 5
+    },
+    {
+      "id": 3,
+      "text": "트럼프 대통령이 이란과의 '작은 합의'가 아닌,",
+      "start_sec": 5,
+      "end_sec": 8
+    },
+    {
+      "id": 4,
+      "text": "'포괄적인 합의'를 원한다고 밝혔습니다.",
+      "start_sec": 8,
+      "end_sec": 11
+    },
+    {
+      "id": 5,
+      "text": "밴스 부통령은 이란과의 회담에서",
+      "start_sec": 11,
+      "end_sec": 14
+    },
+    {
+      "id": 6,
+      "text": "큰 진전이 있었지만, 협상이 타결되지 않은 이유는",
+      "start_sec": 14,
+      "end_sec": 18
+    },
+    {
+      "id": 7,
+      "text": "트럼프 대통령이 이란의 핵무기 보유를 막는 합의를",
+      "start_sec": 18,
+      "end_sec": 22
+    },
+    {
+      "id": 8,
+      "text": "진심으로 원하기 때문이라고 설명했습니다.",
+      "start_sec": 22,
+      "end_sec": 25
+    },
+    {
+      "id": 9,
+      "text": "트럼프 대통령 역시 2차 회담 가능성을 시사하며",
+      "start_sec": 25,
+      "end_sec": 29
+    },
+    {
+      "id": 10,
+      "text": "'앞으로 이틀 안에 뭔가 진전이 있을 수 있다'고 말했습니다.",
+      "start_sec": 29,
+      "end_sec": 33
+    },
+    {
+      "id": 11,
+      "text": "지난 11~12일 파키스탄에서 열린 1차 회담에 이어,",
+      "start_sec": 33,
+      "end_sec": 37
+    },
+    {
+      "id": 12,
+      "text": "2차 회담이 성사될 경우 밴스 부통령이",
+      "start_sec": 37,
+      "end_sec": 40
+    },
+    {
+      "id": 13,
+      "text": "다시 협상단 대표를 맡을 가능성이 높습니다.",
+      "start_sec": 40,
+      "end_sec": 43
+    },
+    {
+      "id": 14,
+      "text": "이번 움직임은 중동 지역의 긴장 완화와",
+      "start_sec": 43,
+      "end_sec": 46
+    },
+    {
+      "id": 15,
+      "text": "국제 사회의 핵 확산 방지에 중요한 영향을 미칠 수 있습니다.",
+      "start_sec": 46,
+      "end_sec": 50
+    },
+    {
+      "id": 16,
+      "text": "향후 회담 결과에 따라 국제 유가나 에너지 시장에도",
+      "start_sec": 50,
+      "end_sec": 54
+    },
+    {
+      "id": 17,
+      "text": "변화가 있을 수 있어 주목됩니다.",
+      "start_sec": 54,
+      "end_sec": 56
+    },
+    {
+      "id": 18,
+      "text": "오늘의 뉴스를 아는 척 하고 싶으시다면 이렇게 말해보세요.",
+      "start_sec": 56,
+      "end_sec": 60
+    },
+    {
+      "id": 19,
+      "text": "트럼프 대통령이 '그랜드 바겐'을 원한다는 밴스 부통령의 발언처럼,",
+      "start_sec": 60,
+      "end_sec": 65
+    },
+    {
+      "id": 20,
+      "text": "이번 미-이란 회담은 단순히 국지적인 문제가 아닌,",
+      "start_sec": 65,
+      "end_sec": 69
+    },
+    {
+      "id": 21,
+      "text": "핵무기 보유 금지를 포함한 포괄적인 합의를 목표로 하고 있다고 하네요.",
+      "start_sec": 69,
+      "end_sec": 75
+    },
+    {
+      "id": 22,
+      "text": "더 자세히 알아보고 싶으시다면, 3가지 키워드를 검색해보세요!",
+      "start_sec": 75,
+      "end_sec": 79
+    }
+  ],
+  "subtitles_en": [
+    {
+      "id": 1,
+      "text": "New diplomatic movements are being spotted between the United States and Iran."
+    },
+    {
+      "id": 2,
+      "text": "US Vice President JD Vance stated that President Trump desires a 'comprehensive agreement' with Iran,"
+    },
+    {
+      "id": 3,
+      "text": "rather than a 'small deal'."
+    },
+    {
+      "id": 4,
+      "text": "Vice President Vance explained that while significant progress was made in talks with Iran,"
+    },
+    {
+      "id": 5,
+      "text": "the reason for the stalled negotiations is President Trump's genuine desire for an agreement"
+    },
+    {
+      "id": 6,
+      "text": "that prevents Iran from possessing nuclear weapons."
+    },
+    {
+      "id": 7,
+      "text": "President Trump also hinted at the possibility of a second meeting,"
+    },
+    {
+      "id": 8,
+      "text": "saying, 'Something could progress in the next two days'."
+    },
+    {
+      "id": 9,
+      "text": "Following the first meeting held in Pakistan on November 11-12,"
+    },
+    {
+      "id": 10,
+      "text": "Vice President Vance is likely to lead the negotiation team again if a second round takes place."
+    },
+    {
+      "id": 11,
+      "text": "These developments could significantly impact the de-escalation of tensions in the Middle East"
+    },
+    {
+      "id": 12,
+      "text": "and the international community's efforts to prevent nuclear proliferation."
+    },
+    {
+      "id": 13,
+      "text": "Depending on the outcome of future talks, changes may also occur in global oil prices and energy markets,"
+    },
+    {
+      "id": 14,
+      "text": "making this a situation to watch."
+    },
+    {
+      "id": 15,
+      "text": "If you want to sound knowledgeable about today's news, try saying this:"
+    },
+    {
+      "id": 16,
+      "text": "As Vice President Vance mentioned President Trump's desire for a 'grand bargain',"
+    },
+    {
+      "id": 17,
+      "text": "these US-Iran talks are not just about regional issues,"
+    },
+    {
+      "id": 18,
+      "text": "but are aiming for a comprehensive agreement that includes the prohibition of nuclear weapons."
+    },
+    {
+      "id": 19,
+      "text": "If you want to learn more, try searching for these three keywords!"
+    }
+  ],
+  "broll_keywords_en": [
+    "US Iran relations",
+    "diplomatic negotiation",
+    "nuclear proliferation",
+    "Middle East tensions",
+    "international agreement"
+  ],
+  "onscreen_cards": [
+    {
+      "type": "headline",
+      "text": "미-이란, '포괄적 합의' 추진"
+    },
+    {
+      "type": "source",
+      "text": "출처: 한겨레"
+    }
+  ],
+  "factual_confidence_score": 0.9,
+  "risk_flags": [],
+  "char_count_estimate": 280
+}
