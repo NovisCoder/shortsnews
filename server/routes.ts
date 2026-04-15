@@ -3,6 +3,9 @@ import { createServer } from "http";
 import { storage } from "./storage";
 import { randomUUID } from "crypto";
 import Parser from "rss-parser";
+import path from "path";
+import fs from "fs";
+import { generateVideo, type VideoJob } from "./video_pipeline";
 
 // ── GitHub helper ────────────────────────────────────────────────────────────
 const GH_REPO = "NovisCoder/shortsnews";
@@ -429,11 +432,7 @@ export function registerRoutes(httpServer: ReturnType<typeof createServer>, app:
   });
 
   // ── Video generation ──────────────────────────────────────────────────────
-  const path = require("path");
-  const fs = require("fs");
-  const { generateVideo } = require("./video_pipeline");
-
-  const videoJobs = new Map<string, { status: string; progress: string[]; outputPath?: string; error?: string }>();
+  const videoJobs = new Map<string, VideoJob>();
 
   // POST generate video
   app.post("/api/projects/:projectId/video", (req, res) => {
