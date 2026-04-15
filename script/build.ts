@@ -34,11 +34,12 @@ async function buildAll() {
     bundle: true,
     platform: "node",
     target: "node20",
-    format: "esm",           // ← cjs → esm 으로 변경
-    outfile: path.resolve(distDir, "index.mjs"),  // ← .cjs → .mjs
+    format: "cjs",
+    outfile: path.resolve(distDir, "index.cjs"),
     external: ["better-sqlite3", "fsevents"],
+    // import.meta.url 을 __filename 기반으로 교체
     define: {
-      "process.env.NODE_ENV": '"production"',
+      "import.meta.url": "('file:///' + __filename.replace(/\\\\/g, '/'))",
     },
   });
 
