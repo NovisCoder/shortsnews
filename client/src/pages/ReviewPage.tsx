@@ -14,13 +14,11 @@ import {
   CheckCircle2,
   Download,
   Loader2,
-  ChevronRight,
   FileJson,
   Captions,
   ArrowLeft,
   Github,
   Film,
-  Play,
   RefreshCw,
 } from "lucide-react";
 import type { Project } from "../../../shared/schema";
@@ -80,7 +78,6 @@ export default function ReviewPage() {
       try {
         const parsed: ScriptData = JSON.parse(project.scriptJson);
         setScriptData(parsed);
-        // Pre-populate editable fields
         const s = parsed.script || {};
         setEditedScript({
           topic_intro: s.topic_intro || "",
@@ -107,7 +104,6 @@ export default function ReviewPage() {
           exportStatus: "approved",
           editorNotes,
           githubToken: githubToken || undefined,
-          // Merge edits back to scriptJson
           scriptJson: JSON.stringify({
             ...scriptData,
             script: {
@@ -194,12 +190,11 @@ export default function ReviewPage() {
 
   return (
     <div className="max-w-2xl mx-auto animate-in space-y-6">
-      {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1 flex-1">
           <div className="flex items-center gap-2">
             <Link href="/">
-              <a className="text-muted-foreground hover:text-foreground transition-colors" data-testid="link-back">
+              <a className="text-muted-foreground hover:text-foreground transition-colors">
                 <ArrowLeft size={16} />
               </a>
             </Link>
@@ -224,7 +219,6 @@ export default function ReviewPage() {
         </div>
       </div>
 
-      {/* Stats + Flags */}
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
         <div className="flex items-center gap-6 text-sm">
           <div>
@@ -241,7 +235,6 @@ export default function ReviewPage() {
             </span>
           </div>
         </div>
-
         {flags.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {flags.map((f: string) => (
@@ -252,7 +245,6 @@ export default function ReviewPage() {
             ))}
           </div>
         )}
-
         {scriptData.summary_line && (
           <p className="text-sm text-muted-foreground border-t border-border pt-3 mt-1">
             {scriptData.summary_line}
@@ -260,80 +252,31 @@ export default function ReviewPage() {
         )}
       </div>
 
-      {/* Script sections */}
       <div className="space-y-4">
-        {/* Opening — fixed */}
         <div className="script-block">
           <p className="script-label">오프닝 (고정)</p>
           <p className="text-sm font-medium text-primary">{s.opening}</p>
         </div>
-
-        {/* Topic intro — editable */}
-        <ScriptEditBlock
-          label="주제 소개"
-          value={editedScript.topic_intro || ""}
-          onChange={(v) => setEditedScript((p) => ({ ...p, topic_intro: v }))}
-        />
-
-        {/* Summary intro — editable */}
-        <ScriptEditBlock
-          label="요약 한 문장"
-          value={editedScript.summary_intro || ""}
-          onChange={(v) => setEditedScript((p) => ({ ...p, summary_intro: v }))}
-        />
-
-        {/* What happened — editable (multi-line) */}
+        <ScriptEditBlock label="주제 소개" value={editedScript.topic_intro || ""} onChange={(v) => setEditedScript((p) => ({ ...p, topic_intro: v }))} />
+        <ScriptEditBlock label="요약 한 문장" value={editedScript.summary_intro || ""} onChange={(v) => setEditedScript((p) => ({ ...p, summary_intro: v }))} />
         <div className="script-block">
           <p className="script-label">무슨 일이 (1줄에 1문장)</p>
-          <Textarea
-            value={editedScript.what_happened || ""}
-            onChange={(e) => setEditedScript((p) => ({ ...p, what_happened: e.target.value }))}
-            rows={4}
-            className="text-sm resize-none mt-1"
-            data-testid="textarea-what-happened"
-          />
+          <Textarea value={editedScript.what_happened || ""} onChange={(e) => setEditedScript((p) => ({ ...p, what_happened: e.target.value }))} rows={4} className="text-sm resize-none mt-1" />
         </div>
-
-        {/* Daily impact — editable */}
         <div className="script-block">
           <p className="script-label">일상 영향 (1줄에 1문장)</p>
-          <Textarea
-            value={editedScript.daily_impact || ""}
-            onChange={(e) => setEditedScript((p) => ({ ...p, daily_impact: e.target.value }))}
-            rows={3}
-            className="text-sm resize-none mt-1"
-            data-testid="textarea-daily-impact"
-          />
+          <Textarea value={editedScript.daily_impact || ""} onChange={(e) => setEditedScript((p) => ({ ...p, daily_impact: e.target.value }))} rows={3} className="text-sm resize-none mt-1" />
         </div>
-
-        {/* Flex line */}
         <div className="script-block border-primary/30 bg-primary/5">
           <p className="script-label text-primary/70">아는 척 멘트</p>
           <p className="text-xs text-muted-foreground mb-2">{s.flex_intro}</p>
-          <Textarea
-            value={editedScript.flex_line || ""}
-            onChange={(e) => setEditedScript((p) => ({ ...p, flex_line: e.target.value }))}
-            rows={2}
-            className="text-sm resize-none font-medium"
-            data-testid="textarea-flex-line"
-          />
+          <Textarea value={editedScript.flex_line || ""} onChange={(e) => setEditedScript((p) => ({ ...p, flex_line: e.target.value }))} rows={2} className="text-sm resize-none font-medium" />
         </div>
-
-        {/* Search keywords */}
         <div className="script-block">
           <p className="script-label">검색 키워드 (쉼표 구분)</p>
           <p className="text-xs text-muted-foreground mb-2">{s.search_intro}</p>
-          <input
-            type="text"
-            value={editedScript.search_keywords_ko || ""}
-            onChange={(e) => setEditedScript((p) => ({ ...p, search_keywords_ko: e.target.value }))}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            placeholder="키워드1, 키워드2, 키워드3"
-            data-testid="input-keywords"
-          />
+          <input type="text" value={editedScript.search_keywords_ko || ""} onChange={(e) => setEditedScript((p) => ({ ...p, search_keywords_ko: e.target.value }))} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="키워드1, 키워드2, 키워드3" />
         </div>
-
-        {/* B-roll keywords */}
         {scriptData.broll_keywords_en?.length && (
           <div className="script-block">
             <p className="script-label">B-roll 키워드 (영문)</p>
@@ -344,60 +287,24 @@ export default function ReviewPage() {
             </div>
           </div>
         )}
-
-        {/* Editor notes */}
         <div className="script-block">
           <p className="script-label">검수 메모</p>
-          <Textarea
-            value={editorNotes}
-            onChange={(e) => setEditorNotes(e.target.value)}
-            rows={2}
-            placeholder="수정 사항, 확인 필요 내용 등..."
-            className="text-sm resize-none mt-1"
-            data-testid="textarea-editor-notes"
-          />
+          <Textarea value={editorNotes} onChange={(e) => setEditorNotes(e.target.value)} rows={2} placeholder="수정 사항, 확인 필요 내용 등..." className="text-sm resize-none mt-1" />
         </div>
       </div>
 
-      {/* Action buttons */}
       <div className="flex gap-3">
-        <Button
-          onClick={() => approveMutation.mutate()}
-          disabled={approveMutation.isPending}
-          className="flex-1"
-          data-testid="button-approve"
-        >
-          {approveMutation.isPending ? (
-            <Loader2 size={16} className="mr-2 animate-spin" />
-          ) : (
-            <CheckCircle2 size={16} className="mr-2" />
-          )}
+        <Button onClick={() => approveMutation.mutate()} disabled={approveMutation.isPending} className="flex-1">
+          {approveMutation.isPending ? <Loader2 size={16} className="mr-2 animate-spin" /> : <CheckCircle2 size={16} className="mr-2" />}
           검수 완료 / 승인
-          {githubToken && (
-            <Github size={14} className="ml-1.5 text-green-400" />
-          )}
+          {githubToken && <Github size={14} className="ml-1.5 text-green-400" />}
         </Button>
-
-        <Button variant="outline" onClick={handleExport} data-testid="button-export-json">
-          <FileJson size={16} className="mr-1.5" />
-          JSON
-        </Button>
-
-        <Button variant="outline" onClick={() => handleSrtDownload("ko")} data-testid="button-srt-ko">
-          <Captions size={16} className="mr-1.5" />
-          KO 자막
-        </Button>
-
-        <Button variant="outline" onClick={() => handleSrtDownload("en")} data-testid="button-srt-en">
-          <Captions size={16} className="mr-1.5" />
-          EN 자막
-        </Button>
+        <Button variant="outline" onClick={handleExport}><FileJson size={16} className="mr-1.5" />JSON</Button>
+        <Button variant="outline" onClick={() => handleSrtDownload("ko")}><Captions size={16} className="mr-1.5" />KO 자막</Button>
+        <Button variant="outline" onClick={() => handleSrtDownload("en")}><Captions size={16} className="mr-1.5" />EN 자막</Button>
       </div>
 
-      {/* Video generation section */}
-      {isApproved && (
-        <VideoSection projectId={projectId} />
-      )}
+      {isApproved && <VideoSection projectId={projectId} />}
     </div>
   );
 }
@@ -411,13 +318,26 @@ const VOICE_OPTIONS = [
   { value: "Puck", label: "Puck (남성, 캐주얼)" },
 ];
 
+// 섹션 6개 기준 총 스텝 수 (TTS + 렌더링 + 완료 = 섹션당 3스텝 + 합치기 1)
+const TOTAL_STEPS = 6 * 3 + 1;
+
 function VideoSection({ projectId }: { projectId: string }) {
   const { toast } = useToast();
   const [videoJobId, setVideoJobId] = useState<string | null>(null);
   const [selectedVoice, setSelectedVoice] = useState("Kore");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [elapsed, setElapsed] = useState(0);
 
-  // Poll job status
+  // 경과 시간 타이머
+  useEffect(() => {
+    if (!isGenerating) { setElapsed(0); return; }
+    const timer = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - (startTime ?? Date.now())) / 1000));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isGenerating, startTime]);
+
   const { data: jobStatus } = useQuery<{ status: string; progress: string[]; error?: string }>({
     queryKey: ["/api/video-jobs", videoJobId],
     queryFn: () => apiRequest(`/api/video-jobs/${videoJobId}`),
@@ -428,7 +348,7 @@ function VideoSection({ projectId }: { projectId: string }) {
   useEffect(() => {
     if (jobStatus?.status === "done") {
       setIsGenerating(false);
-      toast({ title: "영상 생성 완료", description: "미리보기 및 다운로드가 준비되었습니다." });
+      toast({ title: "영상 생성 완료 🎉", description: "미리보기 및 다운로드가 준비되었습니다." });
     } else if (jobStatus?.status === "error") {
       setIsGenerating(false);
       toast({ title: "영상 생성 실패", description: jobStatus.error || "알 수 없는 오류", variant: "destructive" });
@@ -437,6 +357,7 @@ function VideoSection({ projectId }: { projectId: string }) {
 
   const startGeneration = async () => {
     setIsGenerating(true);
+    setStartTime(Date.now());
     try {
       const result = await apiRequest<{ jobId: string }>(`/api/projects/${projectId}/video`, {
         method: "POST",
@@ -453,11 +374,12 @@ function VideoSection({ projectId }: { projectId: string }) {
   const isDone = jobStatus?.status === "done";
   const isError = jobStatus?.status === "error";
   const progress = jobStatus?.progress || [];
+  const progressPct = Math.min(Math.round((progress.length / TOTAL_STEPS) * 100), 95);
   const lastProgress = progress[progress.length - 1] || "";
-
-  // Build video URL for download/stream
   const videoStreamUrl = videoJobId ? `/api/video-jobs/${videoJobId}/stream` : null;
   const videoDownloadUrl = videoJobId ? `/api/video-jobs/${videoJobId}/download` : null;
+
+  const fmtTime = (sec: number) => `${Math.floor(sec / 60)}분 ${sec % 60}초`;
 
   return (
     <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-6 space-y-4">
@@ -467,10 +389,10 @@ function VideoSection({ projectId }: { projectId: string }) {
       </div>
 
       <p className="text-sm text-muted-foreground">
-        승인된 대본으로 TTS 음성 + AI 배경 이미지 + 자막이 합성된 9:16 쇼츠 영상을 자동 생성합니다.
+        승인된 대본으로 TTS 음성 + 자막이 합성된 9:16 쇼츠 영상을 자동 생성합니다.
       </p>
 
-      {!isDone && (
+      {!isDone && !isGenerating && (
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <label className="text-xs text-muted-foreground block mb-1">나레이션 목소리</label>
@@ -478,8 +400,6 @@ function VideoSection({ projectId }: { projectId: string }) {
               value={selectedVoice}
               onChange={(e) => setSelectedVoice(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              disabled={isGenerating}
-              data-testid="select-voice"
             >
               {VOICE_OPTIONS.map((v) => (
                 <option key={v.value} value={v.value}>{v.label}</option>
@@ -487,83 +407,80 @@ function VideoSection({ projectId }: { projectId: string }) {
             </select>
           </div>
           <div className="pt-5">
-            <Button
-              onClick={startGeneration}
-              disabled={isGenerating}
-              className="px-6"
-              data-testid="button-generate-video"
-            >
-              {isGenerating ? (
-                <><Loader2 size={16} className="mr-2 animate-spin" />생성 중...</>
-              ) : (
-                <><Film size={16} className="mr-2" />영상 생성</>
-              )}
+            <Button onClick={startGeneration} className="px-6">
+              <Film size={16} className="mr-2" />영상 생성
             </Button>
           </div>
         </div>
       )}
 
-      {/* Progress log */}
-      {isGenerating && progress.length > 0 && (
-        <div className="rounded-lg bg-background/50 border border-border p-3 space-y-1 max-h-48 overflow-y-auto">
-          <p className="text-xs font-medium text-muted-foreground mb-2">진행 상황</p>
-          {progress.map((msg, i) => (
-            <p key={i} className={`text-xs ${i === progress.length - 1 ? "text-primary font-medium" : "text-muted-foreground"}`}>
-              {msg}
-            </p>
-          ))}
-          {isGenerating && (
-            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border">
-              <Loader2 size={12} className="animate-spin text-primary" />
-              <span className="text-xs text-primary">{lastProgress || "준비 중..."}</span>
+      {/* 진행률 표시 */}
+      {isGenerating && (
+        <div className="space-y-3">
+          {/* 진행률 바 */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground font-medium">영상 생성 중...</span>
+              <span className="text-primary font-bold">{progressPct}%</span>
+            </div>
+            <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary rounded-full transition-all duration-700"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>⏱ 경과: {fmtTime(elapsed)}</span>
+              <span>보통 2~5분 소요 · 페이지를 닫지 마세요</span>
+            </div>
+          </div>
+
+          {/* 현재 작업 표시 */}
+          <div className="flex items-center gap-2 rounded-lg bg-background/50 border border-border px-3 py-2">
+            <Loader2 size={13} className="animate-spin text-primary shrink-0" />
+            <span className="text-xs text-primary font-medium truncate">
+              {lastProgress || "준비 중..."}
+            </span>
+          </div>
+
+          {/* 진행 로그 */}
+          {progress.length > 0 && (
+            <div className="rounded-lg bg-background/30 border border-border p-3 max-h-36 overflow-y-auto space-y-0.5">
+              {progress.map((msg, i) => (
+                <p key={i} className={`text-xs ${i === progress.length - 1 ? "text-foreground" : "text-muted-foreground"}`}>
+                  {msg}
+                </p>
+              ))}
             </div>
           )}
         </div>
       )}
 
-      {/* Error state */}
+      {/* 오류 */}
       {isError && (
         <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3 space-y-2">
           <p className="text-sm text-destructive font-medium">생성 실패</p>
           <p className="text-xs text-destructive/70">{jobStatus?.error}</p>
-          <Button variant="outline" size="sm" onClick={startGeneration} data-testid="button-retry-video">
-            <RefreshCw size={14} className="mr-1.5" />
-            다시 시도
+          <Button variant="outline" size="sm" onClick={startGeneration}>
+            <RefreshCw size={14} className="mr-1.5" />다시 시도
           </Button>
         </div>
       )}
 
-      {/* Video preview + download */}
+      {/* 완료 - 미리보기 + 다운로드 */}
       {isDone && videoStreamUrl && (
         <div className="space-y-4">
           <div className="rounded-lg overflow-hidden bg-black flex justify-center" style={{ maxHeight: "480px" }}>
-            <video
-              src={videoStreamUrl}
-              controls
-              playsInline
-              className="max-h-[480px] w-auto"
-              style={{ aspectRatio: "9/16" }}
-              data-testid="video-preview"
-            />
+            <video src={videoStreamUrl} controls playsInline className="max-h-[480px] w-auto" style={{ aspectRatio: "9/16" }} />
           </div>
-
           <div className="flex gap-3">
-            <a
-              href={videoDownloadUrl!}
-              download
-              className="flex-1"
-            >
-              <Button className="w-full" data-testid="button-download-video">
-                <Download size={16} className="mr-2" />
-                MP4 다운로드
+            <a href={videoDownloadUrl!} download className="flex-1">
+              <Button className="w-full">
+                <Download size={16} className="mr-2" />MP4 다운로드
               </Button>
             </a>
-            <Button variant="outline" onClick={() => {
-              setVideoJobId(null);
-              setIsGenerating(false);
-            }} data-testid="button-regenerate-video">
-              <RefreshCw size={16} className="mr-1.5" />
-              다시 만들기
+            <Button variant="outline" onClick={() => { setVideoJobId(null); setIsGenerating(false); }}>
+              <RefreshCw size={16} className="mr-1.5" />다시 만들기
             </Button>
           </div>
         </div>
@@ -572,18 +489,11 @@ function VideoSection({ projectId }: { projectId: string }) {
   );
 }
 
-function ScriptEditBlock({
-  label, value, onChange,
-}: { label: string; value: string; onChange: (v: string) => void }) {
+function ScriptEditBlock({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div className="script-block">
       <p className="script-label">{label}</p>
-      <Textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        rows={2}
-        className="text-sm resize-none mt-1"
-      />
+      <Textarea value={value} onChange={(e) => onChange(e.target.value)} rows={2} className="text-sm resize-none mt-1" />
     </div>
   );
 }
