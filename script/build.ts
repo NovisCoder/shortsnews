@@ -1,5 +1,4 @@
 import { build as viteBuild } from "vite";
-import { build as esbuildBuild } from "esbuild";
 import { rm } from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -26,21 +25,6 @@ async function buildAll() {
       outDir: path.resolve(distDir, "public"),
       emptyOutDir: true,
     },
-  });
-
-  console.log("🔧 서버 빌드 중...");
-  await esbuildBuild({
-    entryPoints: [path.resolve(rootDir, "server/index.ts")],
-    bundle: true,
-    platform: "node",
-    target: "node20",
-    format: "cjs",
-    outfile: path.resolve(distDir, "index.cjs"),
-    external: [
-      "better-sqlite3",
-      "fsevents",
-      // static.ts가 process.cwd() 쓰므로 import.meta 없음 — 문제 없음
-    ],
   });
 
   console.log("✅ 빌드 완료!");
