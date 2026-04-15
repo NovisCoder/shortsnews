@@ -1,0 +1,185 @@
+{
+  "topic": "호르무즈 해협 봉쇄와 국제 정세 변화",
+  "summary_line": "미국이 이란의 해상 봉쇄에 맞서 호르무즈 해협을 중심으로 역봉쇄 조치를 단행하며 국제 유가와 국내 증시에 영향을 미치고 있습니다.",
+  "key_points": [
+    "미국, 이란의 호르무즈 해협 통제에 맞서 역봉쇄 시작",
+    "국제 유가 급등 후 상승폭 줄여, 국내 증시 하락",
+    "한국, 선박 안전 확보 및 비상 대응 체제 유지"
+  ],
+  "script": {
+    "opening": "오늘 기억해둘만한 뉴스, 쇼츠뉴스가 알려드립니다.",
+    "topic_intro": "세계 석유 수송의 핵심 경로인 호르무즈 해협을 둘러싼 긴장감이 고조되고 있습니다.",
+    "summary_intro": "미국이 이란의 해상 봉쇄에 대응해 호르무즈 해협을 중심으로 역봉쇄에 나섰다는 소식입니다.",
+    "what_happened": [
+      "이란은 예전부터 호르무즈 해협을 통제하며 사실상 봉쇄를 이어왔는데요. 이에 미국이 이란산 원유 수출을 막아 이란의 자금줄을 차단하는 역봉쇄 조치를 시작했습니다.",
+      "미국 대통령은 봉쇄 해역에 접근하는 이란 선박에 대한 즉각적인 제거를 경고했습니다. 이 소식에 국제 유가는 한때 배럴당 100달러를 넘었지만, 이후 협상 기대감으로 상승폭을 줄여 2.6% 오른 선에서 마감했습니다.",
+      "이번 봉쇄는 아라비아만과 오만만 연안의 이란 항구를 오가는 모든 선박에 적용되며, 통행료를 내는 선박도 나포 대상이 될 수 있습니다."
+    ],
+    "daily_impact": [
+      "이 사태로 인해 국내 코스피 지수는 63포인트 이상 하락하며 투자자들의 불안감을 키웠습니다.",
+      "영국은 항행의 자유를 위해 봉쇄에 참여하지 않겠다는 입장을 밝혔지만, 한국은 비상 경제 대응 체제를 유지하며 호르무즈 해협에 고립된 선박 26척의 안전 확보를 위한 협상을 계속하고 있습니다."
+    ],
+    "flex_intro": "오늘의 뉴스를 아는 척 하고 싶으시다면 이렇게 말해보세요.",
+    "flex_line": "호르무즈 해협 봉쇄로 유가가 급등했지만, 결국 2.6% 상승에 그쳤다는 점과 한국 선박 26척의 안전이 중요한 이슈죠.",
+    "search_intro": "더 자세히 알아보고 싶으시다면, 3가지 키워드를 검색해보세요!",
+    "search_keywords_ko": [
+      "호르무즈 해협 봉쇄",
+      "국제 유가 변동",
+      "한국 선박 안전"
+    ]
+  },
+  "subtitles_ko": [
+    {
+      "id": 1,
+      "text": "오늘 기억해둘만한 뉴스, 쇼츠뉴스가 알려드립니다.",
+      "start_sec": 0,
+      "end_sec": 3
+    },
+    {
+      "id": 2,
+      "text": "세계 석유 수송의 핵심 경로인 호르무즈 해협을 둘러싼 긴장감이 고조되고 있습니다.",
+      "start_sec": 3,
+      "end_sec": 7
+    },
+    {
+      "id": 3,
+      "text": "미국이 이란의 해상 봉쇄에 대응해 호르무즈 해협을 중심으로 역봉쇄에 나섰다는 소식입니다.",
+      "start_sec": 7,
+      "end_sec": 12
+    },
+    {
+      "id": 4,
+      "text": "이란은 예전부터 호르무즈 해협을 통제하며 사실상 봉쇄를 이어왔는데요.",
+      "start_sec": 12,
+      "end_sec": 16
+    },
+    {
+      "id": 5,
+      "text": "이에 미국이 이란산 원유 수출을 막아 이란의 자금줄을 차단하는 역봉쇄 조치를 시작했습니다.",
+      "start_sec": 16,
+      "end_sec": 22
+    },
+    {
+      "id": 6,
+      "text": "미국 대통령은 봉쇄 해역에 접근하는 이란 선박에 대한 즉각적인 제거를 경고했습니다.",
+      "start_sec": 22,
+      "end_sec": 27
+    },
+    {
+      "id": 7,
+      "text": "이 소식에 국제 유가는 한때 배럴당 100달러를 넘었지만,",
+      "start_sec": 27,
+      "end_sec": 31
+    },
+    {
+      "id": 8,
+      "text": "이후 협상 기대감으로 상승폭을 줄여 2.6% 오른 선에서 마감했습니다.",
+      "start_sec": 31,
+      "end_sec": 35
+    },
+    {
+      "id": 9,
+      "text": "이번 봉쇄는 아라비아만과 오만만 연안의 이란 항구를 오가는 모든 선박에 적용되며,",
+      "start_sec": 35,
+      "end_sec": 41
+    },
+    {
+      "id": 10,
+      "text": "통행료를 내는 선박도 나포 대상이 될 수 있습니다.",
+      "start_sec": 41,
+      "end_sec": 44
+    },
+    {
+      "id": 11,
+      "text": "이 사태로 인해 국내 코스피 지수는 63포인트 이상 하락하며 투자자들의 불안감을 키웠습니다.",
+      "start_sec": 44,
+      "end_sec": 50
+    },
+    {
+      "id": 12,
+      "text": "영국은 항행의 자유를 위해 봉쇄에 참여하지 않겠다는 입장을 밝혔지만,",
+      "start_sec": 50,
+      "end_sec": 55
+    },
+    {
+      "id": 13,
+      "text": "한국은 비상 경제 대응 체제를 유지하며 호르무즈 해협에 고립된 선박 26척의 안전 확보를 위한 협상을 계속하고 있습니다.",
+      "start_sec": 55,
+      "end_sec": 63
+    }
+  ],
+  "subtitles_en": [
+    {
+      "id": 1,
+      "text": "Here's today's news you should know, brought to you by Shorts News."
+    },
+    {
+      "id": 2,
+      "text": "Tensions are rising around the Strait of Hormuz, a critical route for global oil transport."
+    },
+    {
+      "id": 3,
+      "text": "The US has initiated a counter-blockade centered on the Strait of Hormuz in response to Iran's maritime blockade."
+    },
+    {
+      "id": 4,
+      "text": "Iran has historically controlled the Strait of Hormuz, effectively blockading it."
+    },
+    {
+      "id": 5,
+      "text": "In response, the US has implemented a counter-blockade to cut off Iran's funding by blocking its oil exports."
+    },
+    {
+      "id": 6,
+      "text": "The US President has warned of immediate elimination for any Iranian vessels approaching the blockaded area."
+    },
+    {
+      "id": 7,
+      "text": "Following this news, international oil prices briefly surpassed $100 per barrel,"
+    },
+    {
+      "id": 8,
+      "text": "but later reduced their gains to a 2.6% increase due to expectations of negotiations."
+    },
+    {
+      "id": 9,
+      "text": "This blockade applies to all vessels traveling to and from Iranian ports along the Arabian Sea and the Gulf of Oman,"
+    },
+    {
+      "id": 10,
+      "text": "and ships paying transit fees may also be subject to seizure."
+    },
+    {
+      "id": 11,
+      "text": "This situation caused the domestic KOSPI index to fall by over 63 points, increasing investor anxiety."
+    },
+    {
+      "id": 12,
+      "text": "The UK has stated it will not participate in the blockade to ensure freedom of navigation,"
+    },
+    {
+      "id": 13,
+      "text": "while South Korea is maintaining an emergency economic response system and continuing negotiations to secure the safety of 26 stranded vessels in the Strait of Hormuz."
+    }
+  ],
+  "broll_keywords_en": [
+    "Strait of Hormuz",
+    "oil tanker",
+    "global economy",
+    "geopolitics",
+    "shipping"
+  ],
+  "onscreen_cards": [
+    {
+      "type": "headline",
+      "text": "호르무즈 해협 역봉쇄 시작"
+    },
+    {
+      "type": "source",
+      "text": "뉴스 출처"
+    }
+  ],
+  "factual_confidence_score": 0.9,
+  "risk_flags": [],
+  "char_count_estimate": 630
+}

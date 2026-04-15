@@ -2,11 +2,22 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
 import { projects, appSettings, type Project, type InsertProject, type AppSetting } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
+import path from "path";
+import fs from "fs";
 
-const sqlite = new Database("shortsnews.db");
+// DB 경로: 환경변수 DB_PATH 우선, 없으면 ./shortsnews.db
+const dbPath = process.env.DB_PATH || path.resolve(process.cwd(), "shortsnews.db");
+
+// DB 디렉토리가 없으면 생성
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
+const sqlite = new Database(dbPath);
 const db = drizzle(sqlite);
 
-// Ensure tables exist
+// 테이블 생성
 sqlite.exec(`
   CREATE TABLE IF NOT EXISTS app_settings (
     key TEXT PRIMARY KEY,
@@ -44,7 +55,6 @@ export interface IStorage {
   createProject(data: InsertProject): Project;
   updateProject(projectId: string, data: Partial<InsertProject>): Project | undefined;
   deleteProject(projectId: string): void;
-  // Settings
   getSetting(key: string): string | undefined;
   setSetting(key: string, value: string): void;
   getAllSettings(): Record<string, string>;
@@ -61,13 +71,12 @@ export const storage: IStorage = {
     return db.insert(projects).values(data).returning().get();
   },
   updateProject(projectId, data) {
-    const result = db
+    return db
       .update(projects)
       .set(data)
       .where(eq(projects.projectId, projectId))
       .returning()
       .get();
-    return result;
   },
   deleteProject(projectId) {
     db.delete(projects).where(eq(projects.projectId, projectId)).run();

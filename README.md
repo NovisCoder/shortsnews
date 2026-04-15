@@ -1,48 +1,8 @@
 # 쇼츠뉴스 MVP
 
-뉴스 기사 URL 또는 텍스트 → 60초 유튜브 쇼츠 대본 + MP4 영상 자동 생성 도구
+뉴스 기사 URL 또는 텍스트 → 60초 유튜브 쇼츠 대본 자동 생성 도구
 
-## 🚀 바로 실행
-
-[![Open App](https://img.shields.io/badge/▶%20앱%20바로가기-쇼츠뉴스-blue?style=for-the-badge)](https://www.perplexity.ai/computer/a/syoceunyuseu-mvp-u_jc8aO7RwmDMPEAWFqerA)
-
-> **링크 클릭 → Perplexity Computer 앱이 바로 열립니다.**  
-> Gemini API 키를 처음 한 번만 입력하고 저장하면 이후 자동 로드됩니다.
-
----
-
-## 주요 기능
-
-| 기능 | 설명 |
-|------|------|
-| 대본 자동 생성 | 뉴스 URL 또는 텍스트 → 60초 쇼츠 대본 6섹션 자동 생성 |
-| 대본 검수 | 오프닝·주제·요약·무슨일이·일상영향·아는척 멘트 인라인 편집 |
-| GitHub 자동 저장 | 승인 시 `scripts/` 폴더에 JSON 자동 커밋 |
-| **영상 자동 생성** | 승인 후 버튼 하나로 TTS + 자막 + 9:16 MP4 자동 합성 |
-| API 키 서버 저장 | 처음 한 번 입력·저장하면 이후 자동 로드 (재입력 불필요) |
-
-## 워크플로
-
-```
-기사 URL/텍스트 입력
-       ↓
-Gemini로 대본 자동 생성
-       ↓
-검수 화면에서 편집 + 승인 → scripts/ 폴더에 JSON 자동 저장 (GitHub)
-       ↓
-영상 생성 버튼 → TTS 음성 + 자막 합성 → 9:16 MP4 다운로드
-```
-
-## 필요한 키
-
-| 키 | 용도 | 발급 |
-|----|------|------|
-| **Google Gemini API 키** | 대본 생성 + TTS 음성 | [aistudio.google.com](https://aistudio.google.com/apikey) — 무료 |
-| **GitHub Personal Access Token** | 승인 대본 자동 저장 (선택) | [github.com/settings/tokens](https://github.com/settings/tokens/new?scopes=repo&description=ShortsNews) — `repo` 권한 |
-
-> 키는 앱 내 설정에서 저장하면 서버 DB에 보관되어 다음 방문부터 자동 입력됩니다.
-
-## 로컬 실행
+## 🚀 로컬 실행
 
 ```bash
 # 의존성 설치 (최초 1회)
@@ -53,36 +13,50 @@ npm run dev
 # → http://localhost:5000
 ```
 
-### 프로덕션 빌드
+## 🌐 배포 방법 (Railway 추천)
 
-```bash
-npm run build
-node dist/index.cjs
-```
+이 앱은 **Express 서버 + SQLite DB**가 필요해서 Vercel 단독으로는 동작하지 않습니다.
 
-## 기술 스택
+### Railway 배포 (무료 플랜 가능)
+
+1. [railway.app](https://railway.app) 접속 → GitHub으로 로그인
+2. **New Project** → **Deploy from GitHub repo** → 이 저장소 선택
+3. 환경변수 설정:
+   - `NODE_ENV` = `production`
+   - `PORT` = `5000`
+4. **Deploy** 클릭
+
+Railway는 `package.json`의 `build` → `start` 명령을 자동 실행합니다.
+
+### 환경변수 (선택)
+
+| 변수 | 설명 | 기본값 |
+|------|------|--------|
+| `PORT` | 서버 포트 | `5000` |
+| `DB_PATH` | SQLite DB 파일 경로 | `./shortsnews.db` |
+
+## 📋 필요한 키
+
+| 키 | 용도 | 발급 |
+|----|------|------|
+| **Google Gemini API 키** | 대본 생성 + TTS | [aistudio.google.com](https://aistudio.google.com/apikey) — 무료 |
+| **GitHub Personal Access Token** | 승인 대본 자동 저장 (선택) | [github.com/settings/tokens](https://github.com/settings/tokens) — `repo` 권한 |
+
+## 🛠 기술 스택
 
 | 영역 | 기술 |
 |------|------|
-| Frontend | React + Tailwind CSS + shadcn/ui + Wouter (hash routing) |
-| Backend | Express + SQLite (better-sqlite3 + Drizzle ORM) |
-| 대본 생성 LLM | Google Gemini 2.5 Flash-Lite (무료, 1000 RPD) |
-| TTS | Google Gemini 2.5 Flash Preview TTS (무료, 10 RPM) |
-| 영상 합성 | ffmpeg (이미지 슬라이드 + 자막 오버레이 + WAV 오디오) |
-| 저장소 | GitHub API (대본 JSON 자동 커밋) |
+| Frontend | React + Tailwind CSS + shadcn/ui |
+| Backend | Express + SQLite (Drizzle ORM) |
+| 대본 생성 | Google Gemini 2.5 Flash-Lite |
+| TTS | Google Gemini 2.5 Flash Preview TTS |
+| 영상 합성 | ffmpeg (서버 환경 필요) |
 
-## 프로젝트 구조
+## 📁 프로젝트 구조
 
 ```
 client/          # React 프론트엔드
-  src/pages/
-    GeneratePage.tsx   # 기사 입력 + API 키 설정
-    ReviewPage.tsx     # 대본 검수 + 영상 생성
-    HistoryPage.tsx    # 생성 히스토리
 server/          # Express 백엔드
-  routes.ts            # API 라우트
-  storage.ts           # SQLite CRUD
-  video_pipeline.ts    # TTS + ffmpeg 영상 합성 파이프라인
-shared/          # Drizzle ORM 스키마
-scripts/         # 승인된 대본 JSON 저장 위치 (자동 커밋)
+shared/          # DB 스키마 (Drizzle ORM)
+scripts/         # 승인된 대본 JSON (GitHub 자동 커밋)
 ```

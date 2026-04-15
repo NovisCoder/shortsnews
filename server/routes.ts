@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer } from "http";
 import { storage } from "./storage";
 import { randomUUID } from "crypto";
+import Parser from "rss-parser";
 
 // ── GitHub helper ────────────────────────────────────────────────────────────
 const GH_REPO = "NovisCoder/shortsnews";
@@ -12,7 +13,6 @@ async function pushScriptToGitHub(
   scriptJson: string,
   topic: string,
 ): Promise<{ ok: boolean; url?: string; error?: string }> {
-  // Build a nice filename: scripts/YYYY-MM-DD_topic-slug_projectId.json
   const now = new Date();
   const dateStr = now.toISOString().slice(0, 10);
   const slug = topic
@@ -22,7 +22,6 @@ async function pushScriptToGitHub(
     .slice(0, 40);
   const fileName = `scripts/${dateStr}_${slug}_${projectId.slice(0, 8)}.json`;
 
-  // Pretty-print the JSON
   let prettyJson: string;
   try {
     prettyJson = JSON.stringify(JSON.parse(scriptJson), null, 2);
@@ -32,7 +31,6 @@ async function pushScriptToGitHub(
 
   const content = Buffer.from(prettyJson).toString("base64");
 
-  // Check if file already exists (for update)
   let sha: string | undefined;
   try {
     const existRes = await fetch(
@@ -134,18 +132,16 @@ ${articleText}
 JSON만 출력하세요. 다른 설명 텍스트는 포함하지 마세요.`;
 }
 
-// ── URL article fetcher (simple) ──────────────────────────────────────────────
+// ── URL article fetcher ───────────────────────────────────────────────────────
 async function fetchArticleText(url: string): Promise<{ title: string; text: string; publisher: string }> {
   const res = await fetch(url, {
     headers: { "User-Agent": "Mozilla/5.0 (compatible; ShortsNewsBot/1.0)" },
   });
   const html = await res.text();
 
-  // Basic title extraction
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   const title = titleMatch ? titleMatch[1].trim().replace(/\s*[-|].*$/, "") : "";
 
-  // Strip scripts/styles, extract text
   const stripped = html
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
@@ -158,13 +154,9 @@ async function fetchArticleText(url: string): Promise<{ title: string; text: str
   return { title, text: stripped, publisher };
 }
 
-export function registerRoutes(httpServer: ReturnType<typeof createServer>, app: Express) {
-  import Parser from "rss-parser";
-
+// ── RSS parser (Today News) ───────────────────────────────────────────────────
 const rssParser = new Parser();
 
-// ── Today News endpoint ──────────────────────────────────────────────────────
-// 오늘의 핵심 뉴스 1건 + 관련 기사들을 RSS에서 가져오는 간단 버전
 async function fetchTodayNews() {
   const feeds = [
     { url: "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko", source: "Google News KR" },
@@ -199,9 +191,7 @@ async function fetchTodayNews() {
     throw new Error("뉴스 피드에서 기사를 찾지 못했습니다.");
   }
 
-  // 아주 단순한 버전: 가장 위 기사 1건을 대표로 사용
   const top = items[0];
-
   const keywords = top.title
     .split(/\s+/)
     .map((s) => s.trim())
@@ -210,13 +200,15 @@ async function fetchTodayNews() {
 
   return {
     headline: top.title,
-    summary:
-      "오늘 주요 뉴스 피드에서 가장 먼저 포착된 핵심 기사입니다. 다음 단계에서 이 이슈를 바탕으로 쇼츠 대본을 만들 수 있습니다.",
+    summary: "오늘 주요 뉴스 피드에서 가장 먼저 포착된 핵심 기사입니다. 다음 단계에서 이 이슈를 바탕으로 쇼츠 대본을 만들 수 있습니다.",
     keywords,
     articles: items.slice(0, 8),
   };
 }
-  export function registerRoutes(httpServer: ReturnType<typeof createServer>, app: Express) {
+
+// ── Route registration ────────────────────────────────────────────────────────
+export function registerRoutes(httpServer: ReturnType<typeof createServer>, app: Express) {
+
   // 오늘의 핵심 뉴스
   app.get("/api/today-news", async (_req, res) => {
     try {
@@ -230,9 +222,6 @@ async function fetchTodayNews() {
 
   // GET all projects
   app.get("/api/projects", (_req, res) => {
-    ...
-  // GET all projects
-  app.get("/api/projects", (_req, res) => {
     const all = storage.getAllProjects();
     res.json(all);
   });
@@ -244,7 +233,7 @@ async function fetchTodayNews() {
     res.json(project);
   });
 
-  // POST generate — create project + call OpenAI
+  // POST generate — create project + call Gemini
   app.post("/api/generate", async (req, res) => {
     const { inputType, rawInputText, sourceUrl, tone, topicAngle, apiKey } = req.body;
 
@@ -252,7 +241,7 @@ async function fetchTodayNews() {
       return res.status(400).json({ error: "기사 텍스트 또는 URL을 입력하세요." });
     }
     if (!apiKey) {
-      return res.status(400).json({ error: "OpenAI API 키를 입력하세요." });
+      return res.status(400).json({ error: "Gemini API 키를 입력하세요." });
     }
 
     let articleText = rawInputText || "";
@@ -260,7 +249,6 @@ async function fetchTodayNews() {
     let publisher = "";
     let cleanArticleText = rawInputText || "";
 
-    // Fetch URL if provided
     if (inputType === "url" && sourceUrl) {
       try {
         const fetched = await fetchArticleText(sourceUrl);
@@ -273,9 +261,8 @@ async function fetchTodayNews() {
       }
     }
 
-    // Call Gemini API
     let scriptJson: string;
-    let llmModel = "gemini-2.5-flash-lite";
+    const llmModel = "gemini-2.5-flash-lite";
     try {
       const geminiRes = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${llmModel}:generateContent?key=${apiKey}`,
@@ -303,11 +290,9 @@ async function fetchTodayNews() {
         candidates: Array<{ content: { parts: Array<{ text: string }> } }>
       };
       let content = geminiData.candidates[0].content.parts[0].text.trim();
-      // Strip markdown code fences if present
       content = content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
       scriptJson = content;
-      // Validate JSON
-      JSON.parse(scriptJson);
+      JSON.parse(scriptJson); // validate
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
       return res.status(500).json({ error: "대본 생성 실패: " + message });
@@ -346,7 +331,6 @@ async function fetchTodayNews() {
     const updated = storage.updateProject(req.params.projectId, updateData);
     if (!updated) return res.status(404).json({ error: "Not found" });
 
-    // Auto-push to GitHub when approved + token provided
     let githubResult: { ok: boolean; url?: string; error?: string } | null = null;
     if (updateData.reviewStatus === "approved" && githubToken) {
       try {
@@ -372,16 +356,14 @@ async function fetchTodayNews() {
   // GET settings
   app.get("/api/settings", (_req, res) => {
     const settings = storage.getAllSettings();
-    // Never expose actual values of sensitive keys — return masked versions
     const masked: Record<string, string> = {};
     for (const [k, v] of Object.entries(settings)) {
-      // Return whether value is set, plus last 4 chars for identification
       masked[k] = v ? `saved:${v.slice(-4)}` : "";
     }
     res.json(masked);
   });
 
-  // POST settings — save a single key/value
+  // POST settings
   app.post("/api/settings", (req, res) => {
     const { key, value } = req.body;
     if (!key || typeof value !== "string") {
@@ -391,7 +373,7 @@ async function fetchTodayNews() {
     res.json({ ok: true });
   });
 
-  // GET a single setting raw value (used by generate page on load)
+  // GET single setting
   app.get("/api/settings/:key", (req, res) => {
     const value = storage.getSetting(req.params.key);
     if (value === undefined) return res.status(404).json({ error: "Not found" });
@@ -404,7 +386,7 @@ async function fetchTodayNews() {
     res.json({ success: true });
   });
 
-  // POST export as JSON (returns the full package)
+  // GET export project as JSON
   app.get("/api/projects/:projectId/export", (req, res) => {
     const project = storage.getProject(req.params.projectId);
     if (!project) return res.status(404).json({ error: "Not found" });
@@ -446,15 +428,14 @@ async function fetchTodayNews() {
     res.send(JSON.stringify(exportPackage, null, 2));
   });
 
-  // ─── Video generation ──────────────────────────────────────────────
+  // ── Video generation ──────────────────────────────────────────────────────
   const path = require("path");
   const fs = require("fs");
   const { generateVideo } = require("./video_pipeline");
 
-  // Track active video jobs
   const videoJobs = new Map<string, { status: string; progress: string[]; outputPath?: string; error?: string }>();
 
-  // POST generate video for a project
+  // POST generate video
   app.post("/api/projects/:projectId/video", (req, res) => {
     const project = storage.getProject(req.params.projectId);
     if (!project) return res.status(404).json({ error: "Not found" });
@@ -466,7 +447,6 @@ async function fetchTodayNews() {
     const outputPath = path.join(tmpDir, `${jobId}.mp4`);
     const scriptData = project.scriptJson ? JSON.parse(project.scriptJson) : {};
 
-    // Gemini API key from saved settings or request body
     const apiKey = storage.getSetting("geminiApiKey") || req.body?.apiKey || "";
     if (!apiKey) {
       return res.status(400).json({ error: "Gemini API 키가 없습니다. 설정에서 저장해주세요." });
@@ -476,7 +456,6 @@ async function fetchTodayNews() {
     const job = { status: "running", progress: [] as string[] };
     videoJobs.set(jobId, job);
 
-    // Run async pipeline (non-blocking)
     generateVideo({ scriptData, apiKey, voice, outputPath, job }).catch((err: Error) => {
       if (job.status === "running") {
         job.status = "error";
@@ -491,14 +470,10 @@ async function fetchTodayNews() {
   app.get("/api/video-jobs/:jobId", (req, res) => {
     const job = videoJobs.get(req.params.jobId);
     if (!job) return res.status(404).json({ error: "Job not found" });
-    res.json({
-      status: job.status,
-      progress: job.progress,
-      error: job.error,
-    });
+    res.json({ status: job.status, progress: job.progress, error: job.error });
   });
 
-  // GET download the generated video
+  // GET download video
   app.get("/api/video-jobs/:jobId/download", (req, res) => {
     const job = videoJobs.get(req.params.jobId);
     if (!job || job.status !== "done" || !job.outputPath) {
@@ -509,11 +484,10 @@ async function fetchTodayNews() {
     }
     res.setHeader("Content-Type", "video/mp4");
     res.setHeader("Content-Disposition", `attachment; filename="shortsnews_${req.params.jobId}.mp4"`);
-    const stream = fs.createReadStream(job.outputPath);
-    stream.pipe(res);
+    fs.createReadStream(job.outputPath).pipe(res);
   });
 
-  // GET stream the video for preview (supports range requests)
+  // GET stream video (range requests)
   app.get("/api/video-jobs/:jobId/stream", (req, res) => {
     const job = videoJobs.get(req.params.jobId);
     if (!job || job.status !== "done" || !job.outputPath) {
