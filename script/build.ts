@@ -12,7 +12,6 @@ const distDir = path.resolve(rootDir, "dist");
 async function buildAll() {
   await rm(distDir, { recursive: true, force: true });
 
-  // 1. 클라이언트 빌드 (React)
   console.log("📦 클라이언트 빌드 중...");
   await viteBuild({
     root: path.resolve(rootDir, "client"),
@@ -29,19 +28,15 @@ async function buildAll() {
     },
   });
 
-  // 2. 서버 빌드 (Express)
   console.log("🔧 서버 빌드 중...");
   await esbuildBuild({
     entryPoints: [path.resolve(rootDir, "server/index.ts")],
     bundle: true,
     platform: "node",
     target: "node20",
-    format: "cjs",
-    outfile: path.resolve(distDir, "index.cjs"),
-    external: [
-      "better-sqlite3",
-      "fsevents",
-    ],
+    format: "esm",           // ← cjs → esm 으로 변경
+    outfile: path.resolve(distDir, "index.mjs"),  // ← .cjs → .mjs
+    external: ["better-sqlite3", "fsevents"],
     define: {
       "process.env.NODE_ENV": '"production"',
     },

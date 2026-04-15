@@ -12,7 +12,6 @@ export function serveStatic(app: Express) {
 
   app.use(express.static(distPath));
 
-  // SPA fallback
   app.use("/{*path}", (_req, res) => {
     res.sendFile(path.resolve(distPath, "index.html"));
   });
