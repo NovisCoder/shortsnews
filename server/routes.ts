@@ -357,7 +357,7 @@ export function registerRoutes(httpServer: ReturnType<typeof createServer>, app:
   });
 
   // GET settings
-  app.get("/api/settings", (_req, res) => {
+  app.get("/api/settings", async (_req, res) => {
     const settings = await storage.getAllSettings();
     const masked: Record<string, string> = {};
     for (const [k, v] of Object.entries(settings)) {
@@ -367,7 +367,7 @@ export function registerRoutes(httpServer: ReturnType<typeof createServer>, app:
   });
 
   // POST settings
-  app.post("/api/settings", (req, res) => {
+  app.post("/api/settings", async (req, res) => {
     const { key, value } = req.body;
     if (!key || typeof value !== "string") {
       return res.status(400).json({ error: "key and value required" });
@@ -377,7 +377,7 @@ export function registerRoutes(httpServer: ReturnType<typeof createServer>, app:
   });
 
   // GET single setting
-  app.get("/api/settings/:key", (req, res) => {
+  app.get("/api/settings/:key", async (req, res) => {
     const value = await storage.getSetting(req.params.key);
     if (value === undefined) return res.status(404).json({ error: "Not found" });
     res.json({ value });
