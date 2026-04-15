@@ -36,11 +36,11 @@ async function buildAll() {
     target: "node20",
     format: "cjs",
     outfile: path.resolve(distDir, "index.cjs"),
-    external: ["better-sqlite3", "fsevents"],
-    // import.meta.url 을 __filename 기반으로 교체
-    define: {
-      "import.meta.url": "('file:///' + __filename.replace(/\\\\/g, '/'))",
-    },
+    external: [
+      "better-sqlite3",
+      "fsevents",
+      // static.ts가 process.cwd() 쓰므로 import.meta 없음 — 문제 없음
+    ],
   });
 
   console.log("✅ 빌드 완료!");
