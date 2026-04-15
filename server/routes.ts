@@ -224,14 +224,14 @@ export function registerRoutes(httpServer: ReturnType<typeof createServer>, app:
   });
 
   // GET all projects
-  app.get("/api/projects", (_req, res) => {
-    const all = storage.getAllProjects();
+  app.get("/api/projects", async (_req, res) => {
+    const all = await storage.getAllProjects();
     res.json(all);
   });
 
   // GET single project
-  app.get("/api/projects/:projectId", (req, res) => {
-    const project = storage.getProject(req.params.projectId);
+  app.get("/api/projects/:projectId", async (req, res) => {
+    const project = await storage.getProject(req.params.projectId);
     if (!project) return res.status(404).json({ error: "Not found" });
     res.json(project);
   });
@@ -304,7 +304,7 @@ export function registerRoutes(httpServer: ReturnType<typeof createServer>, app:
     const projectId = randomUUID();
     const now = new Date().toISOString();
 
-    const project = storage.createProject({
+    const project = await storage.createProject({
       projectId,
       createdAt: now,
       inputType: inputType || "pasted_text",
@@ -331,7 +331,7 @@ export function registerRoutes(httpServer: ReturnType<typeof createServer>, app:
   // PATCH update project (review edits)
   app.patch("/api/projects/:projectId", async (req, res) => {
     const { githubToken, ...updateData } = req.body;
-    const updated = storage.updateProject(req.params.projectId, updateData);
+    const updated = await storage.updateProject(req.params.projectId, updateData);
     if (!updated) return res.status(404).json({ error: "Not found" });
 
     let githubResult: { ok: boolean; url?: string; error?: string } | null = null;
@@ -358,7 +358,7 @@ export function registerRoutes(httpServer: ReturnType<typeof createServer>, app:
 
   // GET settings
   app.get("/api/settings", (_req, res) => {
-    const settings = storage.getAllSettings();
+    const settings = await storage.getAllSettings();
     const masked: Record<string, string> = {};
     for (const [k, v] of Object.entries(settings)) {
       masked[k] = v ? `saved:${v.slice(-4)}` : "";
@@ -372,26 +372,26 @@ export function registerRoutes(httpServer: ReturnType<typeof createServer>, app:
     if (!key || typeof value !== "string") {
       return res.status(400).json({ error: "key and value required" });
     }
-    storage.setSetting(key, value);
+    await storage.setSetting(key, value);
     res.json({ ok: true });
   });
 
   // GET single setting
   app.get("/api/settings/:key", (req, res) => {
-    const value = storage.getSetting(req.params.key);
+    const value = await storage.getSetting(req.params.key);
     if (value === undefined) return res.status(404).json({ error: "Not found" });
     res.json({ value });
   });
 
   // DELETE project
-  app.delete("/api/projects/:projectId", (req, res) => {
-    storage.deleteProject(req.params.projectId);
+  app.delete("/api/projects/:projectId", async (req, res) => {
+    await storage.deleteProject(req.params.projectId);
     res.json({ success: true });
   });
 
   // GET export project as JSON
-  app.get("/api/projects/:projectId/export", (req, res) => {
-    const project = storage.getProject(req.params.projectId);
+  app.get("/api/projects/:projectId/export", async (req, res) => {
+    const project = await storage.getProject(req.params.projectId);
     if (!project) return res.status(404).json({ error: "Not found" });
 
     let parsed: Record<string, unknown> = {};
@@ -435,8 +435,8 @@ export function registerRoutes(httpServer: ReturnType<typeof createServer>, app:
   const videoJobs = new Map<string, VideoJob>();
 
   // POST generate video
-  app.post("/api/projects/:projectId/video", (req, res) => {
-    const project = storage.getProject(req.params.projectId);
+  app.post("/api/projects/:projectId/video", async (req, res) => {
+    const project = await storage.getProject(req.params.projectId);
     if (!project) return res.status(404).json({ error: "Not found" });
 
     const jobId = `vid_${Date.now()}`;
@@ -446,7 +446,7 @@ export function registerRoutes(httpServer: ReturnType<typeof createServer>, app:
     const outputPath = path.join(tmpDir, `${jobId}.mp4`);
     const scriptData = project.scriptJson ? JSON.parse(project.scriptJson) : {};
 
-    const apiKey = storage.getSetting("geminiApiKey") || req.body?.apiKey || "";
+    const apiKey = await storage.getSetting("geminiApiKey") || req.body?.apiKey || "";
     if (!apiKey) {
       return res.status(400).json({ error: "Gemini API 키가 없습니다. 설정에서 저장해주세요." });
     }
